@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macro Regime Dashboard</title>
+  <meta name="description" content="景氣與政策評分系統互動式儀表板 — 大環境分數 vs 美股指數">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    /* =============================== Reset & Base =============================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #161b22; --surface2: #1c2333;
+      --border: #30363d; --text: #e6edf3; --text2: #8b949e;
+      --accent: #22d3ee; --accent2: #06b6d4;
+      --sp500: #3b82f6; --nasdaq: #a855f7; --dji: #f97316; --rut: #ef4444;
+      --credit: #22d3ee; --policy: #f472b6; --pricefx: #34d399;
+      --sub1: #22d3ee; --sub2: #f472b6; --sub3: #34d399;
+      --sub4: #facc15; --sub5: #fb923c; --sub6: #a78bfa; --sub7: #f87171;
+      --radius: 12px; --glass: rgba(22,27,34,0.85);
+    }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 24px 16px;
+    }
+    h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+    h2 { font-size: 1.15rem; font-weight: 600; color: var(--accent); margin-bottom: 12px; }
+
+    /* =============================== Layout =============================== */
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 32px; }
+    .header p { color: var(--text2); margin-top: 6px; font-size: 0.9rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 24px rgba(0,0,0,.35);
+      transition: box-shadow .3s;
+    }
+    .card:hover { box-shadow: 0 8px 32px rgba(34,211,238,.08); }
+
+    /* =============================== Controls =============================== */
+    .controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 16px; }
+    .control-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .control-label { font-size: 0.78rem; color: var(--text2); margin-right: 6px; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* Time range buttons */
+    .btn-range {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--text2); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-range:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-range[aria-pressed="true"] {
+      background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600;
+    }
+
+    /* Checkbox toggles */
+    .toggle-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: transparent; color: var(--text2); font-size: 0.78rem; font-weight: 500;
+      cursor: pointer; transition: all .25s; user-select: none;
+    }
+    .toggle-pill .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      display: inline-block; transition: transform .2s;
+    }
+    .toggle-pill:hover { border-color: var(--text); }
+    .toggle-pill.active { color: var(--text); border-color: var(--accent2); background: rgba(34,211,238,.1); }
+    .toggle-pill.active .dot { transform: scale(1.2); }
+
+    /* Custom date inputs */
+    .date-input {
+      padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text); font-size: 0.78rem;
+      font-family: 'Inter', sans-serif; outline: none;
+    }
+    .date-input:focus { border-color: var(--accent); }
+    .custom-range { display: none; align-items: center; gap: 6px; }
+    .custom-range.visible { display: flex; }
+    .custom-range span { color: var(--text2); font-size: 0.78rem; }
+
+    /* =============================== Chart containers =============================== */
+    .chart-wrap { position: relative; height: 400px; }
+    @media (max-width: 768px) { .chart-wrap { height: 300px; } }
+
+    /* =============================== Info bar =============================== */
+    .info-bar {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 20px; font-size: 0.82rem;
+    }
+    .info-chip {
+      padding: 6px 14px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .info-chip .label { color: var(--text2); margin-right: 4px; }
+    .info-chip .value { font-weight: 600; color: var(--accent); }
+
+    /* =============================== Loading =============================== */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 300px; color: var(--text2); font-size: 1rem;
+    }
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .8s linear infinite; margin-right: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Macro Regime Dashboard</h1>
+      <p>景氣與政策評分系統 — 大環境分數 vs. 美股指數互動式儀表板</p>
+    </div>
+
+    <!-- Info bar -->
+    <div class="info-bar" id="infoBar">
+      <div class="info-chip"><span class="label">資料產生</span><span class="value" id="infoGenAt">-</span></div>
+      <div class="info-chip"><span class="label">最新評分</span><span class="value" id="infoLatest">-</span></div>
+      <div class="info-chip"><span class="label">Regime</span><span class="value" id="infoRegime">-</span></div>
+    </div>
+
+    <!-- ============= Chart C: Macro Score vs Indices ============= -->
+    <div class="card" id="chartCCard">
+      <h2>C. 大環境分數 vs. 美股指數</h2>
+      <div class="controls">
+        <div class="control-group">
+          <span class="control-label">時間</span>
+          <button class="btn-range" data-range="1M">1M</button>
+          <button class="btn-range" data-range="3M">3M</button>
+          <button class="btn-range" data-range="6M">6M</button>
+          <button class="btn-range" data-range="1Y" aria-pressed="true">1Y</button>
+          <button class="btn-range" data-range="3Y">3Y</button>
+          <button class="btn-range" data-range="ALL">ALL</button>
+          <button class="btn-range" data-range="CUSTOM">自訂</button>
+        </div>
+        <div class="custom-range" id="customRange">
+          <input type="date" class="date-input" id="dateFrom">
+          <span>~</span>
+          <input type="date" class="date-input" id="dateTo">
+          <button class="btn-range" id="applyCustom" style="background:var(--accent);color:var(--bg);border-color:var(--accent)">套用</button>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <span class="control-label">指數</span>
+          <button class="toggle-pill active" data-index="SP500"><span class="dot" style="background:var(--sp500)"></span>S&amp;P 500</button>
+          <button class="toggle-pill active" data-index="NASDAQCOM"><span class="dot" style="background:var(--nasdaq)"></span>NASDAQ</button>
+          <button class="toggle-pill" data-index="DJIA"><span class="dot" style="background:var(--dji)"></span>DJI</button>
+          <button class="toggle-pill" data-index="RUT"><span class="dot" style="background:var(--rut)"></span>Russell 2000</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartC"></canvas></div>
+    </div>
+
+    <!-- ============= Chart D: Sub-indicator Scores ============= -->
+    <div class="card" id="chartDCard">
+      <h2>D. 子指標分數歷史走勢</h2>
+      <div class="controls">
+        <div class="control-group" id="subPills">
+          <span class="control-label">子指標</span>
+          <!-- filled dynamically -->
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartD"></canvas></div>
+    </div>
+
+    <!-- ============= Chart E: Dot Plot / Policy Forward Score ============= -->
+    <div class="card" id="chartECard">
+      <h2>E. FOMC 點陣圖利率預測 vs 綜合政策預期分數</h2>
+      <div id="policyForwardBadge" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px"></div>
+      <div class="controls">
+        <div class="control-group">
+          <span class="control-label">利率線</span>
+          <button class="toggle-pill active" data-dotline="ffr_spot"><span class="dot" style="background:#f87171"></span>FFR 實際值</button>
+          <button class="toggle-pill active" data-dotline="ffr_1y"><span class="dot" style="background:#38bdf8"></span>1Y 預測</button>
+          <button class="toggle-pill active" data-dotline="ffr_long"><span class="dot" style="background:#a78bfa"></span>長期中性</button>
+          <button class="toggle-pill" data-dotline="ffr_current"><span class="dot" style="background:#facc15"></span>當年預測</button>
+          <button class="toggle-pill" data-dotline="ffr_2y"><span class="dot" style="background:#34d399"></span>2Y 預測</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartE"></canvas></div>
+    </div>
+  </div>
+
+  <script>
+  /* ======================================================================
+   *  State & Config
+   * ====================================================================== */
+  const STATE = {
+    range: '1Y',
+    customFrom: null,
+    customTo: null,
+    activeIndices: new Set(['SP500', 'NASDAQCOM']),
+    activeSubs: new Set(),
+    data: null,            // raw loaded JSON
+    chartC: null,
+    chartD: null,
+    chartE: null,
+    activeDotLines: new Set(['ffr_spot','ffr_1y','ffr_long']),
+  };
+
+  const INDEX_META = {
+    SP500:     { label: 'S&P 500',  color: '#3b82f6' },
+    NASDAQCOM: { label: 'NASDAQ',   color: '#a855f7' },
+    DJIA:      { label: 'DJI',      color: '#f97316' },
+    RUT:       { label: 'Russell 2000', color: '#ef4444' },
+  };
+
+  const SUB_COLORS = ['#22d3ee','#f472b6','#34d399','#facc15','#fb923c','#a78bfa','#f87171'];
+  const SUB_LABELS = {
+    SUB_SPREAD_CP_TB6:    'CP-TB6 利差',
+    SUB_SPREAD_PRIME_TB6: 'Prime-TB6 利差',
+    SUB_SPREAD_BAA_GS10:  'Baa-GS10 利差',
+    SUB_FFR:              '聯邦基金利率',
+    SUB_INF_YOY:          '通膨 YoY',
+    SUB_FX_CHG:           '匯率變動',
+    SUB_FX_VOL:           '匯率波動',
+  };
+
+  const REGIME_LABELS = { 3: '寬鬆', 2: '中性偏多', 1: '中性偏保守', 0: '緊縮' };
+
+  /* ======================================================================
+   *  Data Loading
+   * ====================================================================== */
+  async function loadData() {
+    const resp = await fetch('dashboard_data.json');
+    STATE.data = await resp.json();
+
+    // Parse dates once
+    for (const key of Object.keys(STATE.data.scores)) {
+      STATE.data.scores[key].forEach(d => d._d = new Date(d.date));
+    }
+    for (const key of Object.keys(STATE.data.indices)) {
+      STATE.data.indices[key].forEach(d => d._d = new Date(d.date));
+    }
+    for (const key of Object.keys(STATE.data.sub_scores)) {
+      STATE.data.sub_scores[key].forEach(d => d._d = new Date(d.date));
+    }
+
+    // Info bar
+    document.getElementById('infoGenAt').textContent = STATE.data.generated_at;
+    const ms = STATE.data.scores.MACRO_SCORE;
+    if (ms.length) {
+      const last = ms[ms.length - 1];
+      document.getElementById('infoLatest').textContent = `${last.value.toFixed(3)} (${last.date})`;
+      const reg = STATE.data.scores.REGIME;
+      const lastR = reg[reg.length - 1];
+      document.getElementById('infoRegime').textContent = `${lastR.value} — ${REGIME_LABELS[lastR.value] || '?'}`;
+    }
+
+    // Default activeSubs = first 3
+    const subKeys = Object.keys(STATE.data.sub_scores);
+    subKeys.slice(0, 3).forEach(k => STATE.activeSubs.add(k));
+    buildSubPills(subKeys);
+  }
+
+  /* ======================================================================
+   *  Date Range Helpers
+   * ====================================================================== */
+  function getDateRange() {
+    const now = new Date();
+    let from;
+    switch (STATE.range) {
+      case '1M':  from = new Date(now); from.setMonth(from.getMonth() - 1); break;
+      case '3M':  from = new Date(now); from.setMonth(from.getMonth() - 3); break;
+      case '6M':  from = new Date(now); from.setMonth(from.getMonth() - 6); break;
+      case '1Y':  from = new Date(now); from.setFullYear(from.getFullYear() - 1); break;
+      case '3Y':  from = new Date(now); from.setFullYear(from.getFullYear() - 3); break;
+      case 'ALL': from = new Date('2000-01-01'); break;
+      case 'CUSTOM':
+        from = STATE.customFrom ? new Date(STATE.customFrom) : new Date('2000-01-01');
+        const to = STATE.customTo ? new Date(STATE.customTo) : now;
+        return { from, to };
+    }
+    return { from, to: now };
+  }
+
+  function filterByRange(arr) {
+    const { from, to } = getDateRange();
+    return arr.filter(d => d._d >= from && d._d <= to);
+  }
+
+  /* ======================================================================
+   *  Chart C: Macro Score vs Indices
+   * ====================================================================== */
+  function buildChartC() {
+    const ctx = document.getElementById('chartC').getContext('2d');
+
+    const scoreData = filterByRange(STATE.data.scores.MACRO_SCORE);
+    const datasets = [
+      {
+        label: '大環境分數',
+        data: scoreData.map(d => ({ x: d.date, y: d.value })),
+        borderColor: '#22d3ee',
+        backgroundColor: 'rgba(34,211,238,0.08)',
+        yAxisID: 'yScore',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3,
+        fill: false,
+        order: 0,
+      }
+    ];
+
+    // Index datasets
+    for (const [key, meta] of Object.entries(INDEX_META)) {
+      const raw = STATE.data.indices[key];
+      if (!raw) continue;
+      const filtered = filterByRange(raw);
+      datasets.push({
+        label: meta.label,
+        data: filtered.map(d => ({ x: d.date, y: d.value })),
+        borderColor: meta.color,
+        backgroundColor: meta.color + '14',
+        yAxisID: 'yIndex',
+        borderWidth: 1.8,
+        pointRadius: 0,
+        pointHoverRadius: 3,
+        tension: 0.3,
+        fill: false,
+        hidden: !STATE.activeIndices.has(key),
+        order: 1,
+      });
+    }
+
+    if (STATE.chartC) STATE.chartC.destroy();
+
+    STATE.chartC = new Chart(ctx, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          tooltip: {
+            backgroundColor: 'rgba(22,27,34,0.95)',
+            titleColor: '#e6edf3',
+            bodyColor: '#e6edf3',
+            borderColor: '#30363d',
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 8,
+            bodyFont: { family: 'Inter' },
+          },
+          legend: {
+            labels: { color: '#8b949e', font: { family: 'Inter', size: 12 }, usePointStyle: true, pointStyle: 'circle' },
+          },
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'month', tooltipFormat: 'yyyy-MM-dd' },
+            grid: { color: 'rgba(48,54,61,0.5)' },
+            ticks: { color: '#8b949e', font: { family: 'Inter', size: 11 }, maxTicksLimit: 12 },
+          },
+          yScore: {
+            type: 'linear', position: 'left',
+            title: { display: true, text: '大環境分數', color: '#22d3ee', font: { family: 'Inter' } },
+            grid: { color: 'rgba(48,54,61,0.4)' },
+            ticks: { color: '#22d3ee', font: { family: 'Inter', size: 11 } },
+          },
+          yIndex: {
+            type: 'linear', position: 'right',
+            title: { display: true, text: '指數數值', color: '#8b949e', font: { family: 'Inter' } },
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#8b949e', font: { family: 'Inter', size: 11 } },
+          },
+        },
+      },
+      plugins: [crosshairPlugin],
+    });
+  }
+
+  function updateChartC() {
+    if (!STATE.chartC) return;
+    const scoreData = filterByRange(STATE.data.scores.MACRO_SCORE);
+    STATE.chartC.data.datasets[0].data = scoreData.map(d => ({ x: d.date, y: d.value }));
+
+    let i = 1;
+    for (const key of Object.keys(INDEX_META)) {
+      const raw = STATE.data.indices[key];
+      if (!raw) continue;
+      const ds = STATE.chartC.data.datasets[i];
+      ds.data = filterByRange(raw).map(d => ({ x: d.date, y: d.value }));
+      ds.hidden = !STATE.activeIndices.has(key);
+      i++;
+    }
+    STATE.chartC.update('active');
+  }
+
+  /* ======================================================================
+   *  Chart D: Sub-indicator Scores
+   * ====================================================================== */
+  function buildChartD() {
+    const ctx = document.getElementById('chartD').getContext('2d');
+    const datasets = [];
+    const subKeys = Object.keys(STATE.data.sub_scores);
+
+    subKeys.forEach((key, idx) => {
+      const raw = STATE.data.sub_scores[key];
+      const filtered = filterByRange(raw);
+      const color = SUB_COLORS[idx % SUB_COLORS.length];
+      datasets.push({
+        label: SUB_LABELS[key] || key,
+        data: filtered.map(d => ({ x: d.date, y: d.value })),
+        borderColor: color,
+        backgroundColor: color + '14',
+        borderWidth: 1.8,
+        pointRadius: 0,
+        pointHoverRadius: 3,
+        tension: 0.3,
+        fill: 'origin',
+        hidden: !STATE.activeSubs.has(key),
+      });
+    });
+
+    if (STATE.chartD) STATE.chartD.destroy();
+
+    STATE.chartD = new Chart(ctx, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          tooltip: {
+            backgroundColor: 'rgba(22,27,34,0.95)',
+            titleColor: '#e6edf3', bodyColor: '#e6edf3',
+            borderColor: '#30363d', borderWidth: 1, padding: 12, cornerRadius: 8,
+            bodyFont: { family: 'Inter' },
+          },
+          legend: {
+            labels: { color: '#8b949e', font: { family: 'Inter', size: 12 }, usePointStyle: true, pointStyle: 'circle' },
+          },
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'month', tooltipFormat: 'yyyy-MM-dd' },
+            grid: { color: 'rgba(48,54,61,0.5)' },
+            ticks: { color: '#8b949e', font: { family: 'Inter', size: 11 }, maxTicksLimit: 12 },
+          },
+          y: {
+            title: { display: true, text: '子指標分數', color: '#8b949e', font: { family: 'Inter' } },
+            grid: { color: 'rgba(48,54,61,0.4)' },
+            ticks: { color: '#8b949e', font: { family: 'Inter', size: 11 } },
+          },
+        },
+      },
+      plugins: [crosshairPlugin],
+    });
+  }
+
+  function updateChartD() {
+    if (!STATE.chartD) return;
+    const subKeys = Object.keys(STATE.data.sub_scores);
+    subKeys.forEach((key, idx) => {
+      const ds = STATE.chartD.data.datasets[idx];
+      ds.data = filterByRange(STATE.data.sub_scores[key]).map(d => ({ x: d.date, y: d.value }));
+      ds.hidden = !STATE.activeSubs.has(key);
+    });
+    STATE.chartD.update('active');
+  }
+
+  /* ======================================================================
+   *  Crosshair Plugin (X & Y Spikes)
+   * ====================================================================== */
+  const crosshairPlugin = {
+    id: 'crosshair',
+    afterEvent(chart, args) {
+      if (args.event.type === 'mousemove') {
+        chart.crosshair = { x: args.event.x, y: args.event.y };
+        chart.draw();
+      } else if (args.event.type === 'mouseout') {
+        chart.crosshair = null;
+        chart.draw();
+      }
+    },
+    afterDraw(chart) {
+      if (chart.crosshair && chart.tooltip?._active?.length) {
+        // 垂直線對齊該資料點 (Snap to data point X)
+        const x = chart.tooltip._active[0].element.x;
+        // 水平線跟隨游標 Y (Follow mouse Y)
+        const y = chart.crosshair.y;
+        
+        const ctx = chart.ctx;
+        const top = chart.chartArea.top;
+        const bottom = chart.chartArea.bottom;
+        const left = chart.chartArea.left;
+        const right = chart.chartArea.right;
+
+        // 確保水平線在圖表區域內
+        if (y < top || y > bottom) return;
+
+        ctx.save();
+        ctx.beginPath();
+        // 畫垂直線 (Vertical Spike)
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        // 畫水平線 (Horizontal Spike)
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(34,211,238,0.5)';
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  };
+
+  /* ======================================================================
+   *  Sub-Indicator Pills Builder
+   * ====================================================================== */
+  function buildSubPills(subKeys) {
+    const container = document.getElementById('subPills');
+    // Keep the label
+    subKeys.forEach((key, idx) => {
+      const color = SUB_COLORS[idx % SUB_COLORS.length];
+      const btn = document.createElement('button');
+      btn.className = 'toggle-pill' + (STATE.activeSubs.has(key) ? ' active' : '');
+      btn.dataset.sub = key;
+      btn.innerHTML = `<span class="dot" style="background:${color}"></span>${SUB_LABELS[key] || key}`;
+      btn.addEventListener('click', () => {
+        if (STATE.activeSubs.has(key)) {
+          STATE.activeSubs.delete(key);
+          btn.classList.remove('active');
+        } else {
+          STATE.activeSubs.add(key);
+          btn.classList.add('active');
+        }
+        updateChartD();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  /* ======================================================================
+   *  Event Bindings
+   * ====================================================================== */
+  function bindEvents() {
+    // Time range buttons (shared between Chart C & D)
+    document.querySelectorAll('.btn-range[data-range]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-range[data-range]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true');
+        STATE.range = btn.dataset.range;
+
+        const customEl = document.getElementById('customRange');
+        if (STATE.range === 'CUSTOM') {
+          customEl.classList.add('visible');
+        } else {
+          customEl.classList.remove('visible');
+          updateChartC();
+          updateChartD();
+        }
+      });
+    });
+
+    // Custom date apply
+    document.getElementById('applyCustom').addEventListener('click', () => {
+      STATE.customFrom = document.getElementById('dateFrom').value || null;
+      STATE.customTo = document.getElementById('dateTo').value || null;
+      updateChartC();
+      updateChartD();
+    });
+
+    // Index toggles
+    document.querySelectorAll('.toggle-pill[data-index]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.index;
+        if (STATE.activeIndices.has(key)) {
+          STATE.activeIndices.delete(key);
+          btn.classList.remove('active');
+        } else {
+          STATE.activeIndices.add(key);
+          btn.classList.add('active');
+        }
+        updateChartC();
+      });
+    });
+  }
+
+  /* ======================================================================
+   *  Init
+   * ====================================================================== */
+  /* ======================================================================
+   *  Chart E: Dot Plot / Policy Forward Score
+   * ====================================================================== */
+  const DOTLINE_META = {
+    ffr_spot:    { label: 'FFR 實際值',  color: '#f87171', dash: [] },
+    ffr_current: { label: '當年預測',    color: '#facc15', dash: [6,3] },
+    ffr_1y:      { label: '1Y 預測',     color: '#38bdf8', dash: [] },
+    ffr_2y:      { label: '2Y 預測',     color: '#34d399', dash: [6,3] },
+    ffr_long:    { label: '長期中性',    color: '#a78bfa', dash: [10,5] },
+  };
+
+  function buildChartE() {
+    const pf = STATE.data.policy_forward;
+    if (!pf || !pf.dotplot_history || !pf.dotplot_history.length) return;
+
+    const hist = pf.dotplot_history;
+    const latest = pf.latest || {};
+
+    // Badge: show latest scores
+    const badge = document.getElementById('policyForwardBadge');
+    if (badge && latest.combined_policy_score != null) {
+      const dotS  = latest.policy_forward_score  != null ? latest.policy_forward_score.toFixed(2)  : 'N/A';
+      const polyS = latest.polymarket_score       != null ? latest.polymarket_score.toFixed(3)      : 'N/A';
+      const combS = latest.combined_policy_score  != null ? latest.combined_policy_score.toFixed(2) : 'N/A';
+      const scaled = latest.combined_policy_score_scaled != null ? latest.combined_policy_score_scaled.toFixed(1) : 'N/A';
+      badge.innerHTML = `
+        <span style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);padding:4px 12px;border-radius:8px;font-size:0.82rem;color:#38bdf8">
+          點陣圖 (70%): <b>${dotS}</b>
+        </span>
+        <span style="background:rgba(251,146,60,0.15);border:1px solid rgba(251,146,60,0.4);padding:4px 12px;border-radius:8px;font-size:0.82rem;color:#fb923c">
+          Polymarket (30%): <b>${polyS}</b>
+        </span>
+        <span style="background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.4);padding:4px 12px;border-radius:8px;font-size:0.82rem;color:#22d3ee">
+          綜合: <b>${combS}</b> (${scaled}/100) — ${latest.label || ''}
+        </span>
+      `;
+    }
+
+    const ctx = document.getElementById('chartE').getContext('2d');
+
+    // Rate datasets (left Y axis)
+    const rateDatasets = Object.entries(DOTLINE_META).map(([key, meta]) => ({
+      label: meta.label,
+      data: hist.filter(d => d[key] != null).map(d => ({ x: d.date, y: d[key] })),
+      borderColor: meta.color,
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: meta.dash,
+      pointRadius: 0,
+      tension: 0.3,
+      yAxisID: 'yRate',
+      hidden: !STATE.activeDotLines.has(key),
+    }));
+
+    // Combined score dataset (right Y axis)
+    const scoreDs = {
+      label: '綜合政策預期分數',
+      data: hist.filter(d => d.combined_policy_score != null)
+                .map(d => ({ x: d.date, y: d.combined_policy_score })),
+      borderColor: '#22d3ee',
+      backgroundColor: 'rgba(34,211,238,0.08)',
+      borderWidth: 2.5,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true,
+      yAxisID: 'yScore',
+    };
+
+    if (STATE.chartE) STATE.chartE.destroy();
+
+    STATE.chartE = new Chart(ctx, {
+      type: 'line',
+      data: { datasets: [...rateDatasets, scoreDs] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          tooltip: {
+            mode: 'index', intersect: false,
+            callbacks: {
+              label: item => `${item.dataset.label}: ${item.parsed.y.toFixed(2)}${item.dataset.yAxisID === 'yRate' ? '%' : ''}`,
+            },
+          },
+          legend: {
+            display: true,
+            labels: { color: '#8b949e', font: { family: 'Inter', size: 11 }, usePointStyle: true, padding: 16 },
+          },
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'month', tooltipFormat: 'yyyy-MM' },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#8b949e', maxTicksLimit: 12, font: { family: 'Inter', size: 11 } },
+          },
+          yRate: {
+            position: 'left',
+            title: { display: true, text: '利率 (%)', color: '#f87171', font: { family: 'Inter', size: 12 } },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#8b949e', font: { family: 'Inter', size: 11 }, callback: v => v.toFixed(1) + '%' },
+          },
+          yScore: {
+            position: 'right',
+            min: -2.2, max: 2.2,
+            title: { display: true, text: '政策預期分數', color: '#22d3ee', font: { family: 'Inter', size: 12 } },
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#8b949e', font: { family: 'Inter', size: 11 } },
+          },
+        },
+      },
+      plugins: [crosshairPlugin],
+    });
+  }
+
+  function updateChartE() {
+    if (!STATE.chartE) return;
+    const keys = Object.keys(DOTLINE_META);
+    keys.forEach((key, idx) => {
+      STATE.chartE.data.datasets[idx].hidden = !STATE.activeDotLines.has(key);
+    });
+    STATE.chartE.update('active');
+  }
+
+  // Dot-line toggle bindings
+  function bindDotLineToggles() {
+    document.querySelectorAll('.toggle-pill[data-dotline]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.dotline;
+        if (STATE.activeDotLines.has(key)) {
+          STATE.activeDotLines.delete(key);
+          btn.classList.remove('active');
+        } else {
+          STATE.activeDotLines.add(key);
+          btn.classList.add('active');
+        }
+        updateChartE();
+      });
+    });
+  }
+
+  (async () => {
+    try {
+      await loadData();
+      buildChartC();
+      buildChartD();
+      buildChartE();
+      bindEvents();
+      bindDotLineToggles();
+    } catch (err) {
+      document.querySelector('.container').innerHTML =
+        `<div class="card" style="text-align:center;padding:60px">
+           <h2 style="color:#f87171">載入失敗</h2>
+           <p style="color:var(--text2);margin-top:12px">
+             找不到 <code>dashboard_data.json</code>，請先執行：<br>
+             <code style="color:var(--accent)">python export_dashboard_data.py</code>
+           </p>
+           <p style="color:var(--text2);margin-top:8px;font-size:0.85rem">${err.message}</p>
+         </div>`;
+    }
+  })();
+  </script>
+</body>
+</html>

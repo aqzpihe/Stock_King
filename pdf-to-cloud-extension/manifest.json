@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "PDF to Cloud Drive",
+  "version": "1.0",
+  "description": "將當前打開的 PDF 直接下載並上傳到雲端硬碟，不經過本地儲存。",
+  "permissions": [
+    "activeTab",
+    "identity",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

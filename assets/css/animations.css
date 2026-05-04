@@ -1,0 +1,149 @@
+/* ================================================================
+   animations.css — 動畫輔助 CSS
+   ================================================================ */
+
+/* ===================== Scroll-triggered Entrance ===================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children */
+.stagger-children .reveal:nth-child(1) { transition-delay: 0ms; }
+.stagger-children .reveal:nth-child(2) { transition-delay: 60ms; }
+.stagger-children .reveal:nth-child(3) { transition-delay: 120ms; }
+.stagger-children .reveal:nth-child(4) { transition-delay: 180ms; }
+.stagger-children .reveal:nth-child(5) { transition-delay: 240ms; }
+.stagger-children .reveal:nth-child(6) { transition-delay: 300ms; }
+.stagger-children .reveal:nth-child(7) { transition-delay: 360ms; }
+
+/* ===================== Fade In Up ===================== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp .5s ease forwards;
+}
+
+/* ===================== Slide In Right ===================== */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.slide-in-right {
+  animation: slideInRight .4s ease forwards;
+}
+
+/* ===================== Character Drop-in ===================== */
+.char-drop .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(-30px);
+  animation: charDrop .5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes charDrop {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================== Clip-path Reveal ===================== */
+.clip-reveal-wrapper {
+  overflow: hidden;
+}
+.clip-reveal {
+  transform: translateY(110%);
+  transition: transform .6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.clip-reveal.visible {
+  transform: translateY(0);
+}
+
+/* ===================== Word Color Scrub ===================== */
+.word-scrub .word {
+  display: inline-block;
+  color: var(--color-text-faint);
+  transition: color .3s ease;
+}
+.word-scrub .word.lit {
+  color: var(--color-text);
+}
+
+/* ===================== Row Stagger Slide ===================== */
+.row-stagger tr {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity .4s ease, transform .4s ease;
+}
+.row-stagger tr.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ===================== Sparkline Stroke Animation ===================== */
+@keyframes sparklineDraw {
+  from { stroke-dashoffset: var(--spark-length, 300); }
+  to   { stroke-dashoffset: 0; }
+}
+.sparkline-animate {
+  stroke-dasharray: var(--spark-length, 300);
+  stroke-dashoffset: var(--spark-length, 300);
+  animation: sparklineDraw 1s ease forwards;
+}
+
+/* ===================== Gauge Arc Animation ===================== */
+@keyframes gaugeArc {
+  from { stroke-dashoffset: var(--gauge-circumference, 283); }
+  to   { stroke-dashoffset: var(--gauge-target, 141); }
+}
+
+/* ===================== Counter Animation (CSS Houdini) ===================== */
+@property --counter-value {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: false;
+}
+.counter-animate {
+  --counter-value: 0;
+  transition: --counter-value 1.2s ease-out;
+}
+
+/* ===================== Pulse Glow ===================== */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,.3); }
+  50%      { box-shadow: 0 0 16px 4px rgba(192,57,43,.15); }
+}
+.pulse-glow { animation: pulseGlow 2s ease infinite; }
+
+/* ===================== Skeleton Loading ===================== */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--color-surface-2) 25%,
+    var(--color-surface-dynamic) 50%,
+    var(--color-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ===================== Reduced Motion ===================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  .clip-reveal { transform: none; }
+  .char-drop .char { opacity: 1; transform: none; }
+  .word-scrub .word { color: var(--color-text); }
+  .row-stagger tr { opacity: 1; transform: none; }
+}

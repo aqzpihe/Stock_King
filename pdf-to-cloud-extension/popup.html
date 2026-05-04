@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 300px; padding: 15px; font-family: "Segoe UI", Tahoma, sans-serif; }
+    .group { margin-bottom: 15px; }
+    label { display: block; font-size: 13px; margin-bottom: 5px; color: #333; font-weight: bold;}
+    select, input { padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;}
+    select { width: 100%; }
+    button { width: 100%; padding: 10px; background: #0078D7; color: white; border: none; cursor: pointer; border-radius: 6px; font-size: 14px; margin-top: 5px; transition: background 0.2s;}
+    button:hover { background: #005A9E; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    #status { margin-top: 15px; font-size: 13px; text-align: center; color: #333; }
+    .range-inputs { display: flex; align-items: center; justify-content: space-between; }
+    .range-inputs input { width: 45%; text-align: center; }
+  </style>
+</head>
+<body>
+  <h3 style="text-align: center; margin-top: 0;">儲存 PDF 到雲端</h3>
+  
+  <div class="group">
+    <label>選擇儲存資料夾：</label>
+    <select id="folderSelect">
+      <option value="root">正在載入您的資料夾...</option>
+    </select>
+  </div>
+
+  <div class="group">
+    <label>擷取範圍 (留白代表全部)：</label>
+    <div class="range-inputs">
+      <input type="number" id="startPage" min="1" placeholder="起始頁">
+      <span>至</span>
+      <input type="number" id="endPage" min="1" placeholder="結束頁">
+    </div>
+  </div>
+
+  <button id="saveBtn">上傳當前 PDF</button>
+  <div id="status"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+{
+  "fomc_date": "2026-06-17",
+  "fomc_month": "2026-06",
+  "fetched_at": "2026-05-03T16:37:46.341126+00:00",
+  "event_id": "101772",
+  "event_slug": "fed-decision-in-june-825",
+  "event_title": "Fed Decision in June?",
+  "event_url": "https://polymarket.com/event/fed-decision-in-june-825",
+  "markets": [
+    {
+      "question": "Will the Fed decrease interest rates by 25 bps after the June 2026 meeting?",
+      "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-june-2026-meeting",
+      "outcomes": [
+        {
+          "outcome": "Yes",
+          "probability": 3.6
+        },
+        {
+          "outcome": "No",
+          "probability": 96.4
+        }
+      ],
+      "volume_usd": 2585809.0,
+      "liquidity": 462145.0,
+      "end_date": "2026-06-17T00:00:00Z",
+      "active": true,
+      "polymarket_url": "https://polymarket.com/event/fed-decision-in-june-825",
+      "embed_url": "https://embed.polymarket.com/market?market=will-the-fed-decrease-interest-rates-by-25-bps-after-the-june-2026-meeting&height=300"
+    },
+    {
+      "question": "Will the Fed increase interest rates by 25 bps after the June 2026 meeting?",
+      "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-june-2026-meeting",
+      "outcomes": [
+        {
+          "outcome": "Yes",
+          "probability": 1.1
+        },
+        {
+          "outcome": "No",
+          "probability": 98.9
+        }
+      ],
+      "volume_usd": 2959232.0,
+      "liquidity": 209855.0,
+      "end_date": "2026-06-17T00:00:00Z",
+      "active": true,
+      "polymarket_url": "https://polymarket.com/event/fed-decision-in-june-825",
+      "embed_url": "https://embed.polymarket.com/market?market=will-the-fed-increase-interest-rates-by-25-bps-after-the-june-2026-meeting&height=300"
+    },
+    {
+      "question": "Will the Fed decrease interest rates by 50+ bps after the June 2026 meeting?",
+      "slug": "will-the-fed-decrease-interest-rates-by-50-bps-after-the-june-2026-meeting",
+      "outcomes": [
+        {
+          "outcome": "Yes",
+          "probability": 0.4
+        },
+        {
+          "outcome": "No",
+          "probability": 99.6
+        }
+      ],
+      "volume_usd": 3912235.0,
+      "liquidity": 458775.0,
+      "end_date": "2026-06-17T00:00:00Z",
+      "active": true,
+      "polymarket_url": "https://polymarket.com/event/fed-decision-in-june-825",
+      "embed_url": "https://embed.polymarket.com/market?market=will-the-fed-decrease-interest-rates-by-50-bps-after-the-june-2026-meeting&height=300"
+    },
+    {
+      "question": "Will there be no change in Fed interest rates after the June 2026 meeting?",
+      "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-june-2026-meeting",
+      "outcomes": [
+        {
+          "outcome": "Yes",
+          "probability": 95.5
+        },
+        {
+          "outcome": "No",
+          "probability": 4.5
+        }
+      ],
+      "volume_usd": 2847262.0,
+      "liquidity": 409137.0,
+      "end_date": "2026-06-17T00:00:00Z",
+      "active": true,
+      "polymarket_url": "https://polymarket.com/event/fed-decision-in-june-825",
+      "embed_url": "https://embed.polymarket.com/market?market=will-there-be-no-change-in-fed-interest-rates-after-the-june-2026-meeting&height=300"
+    },
+    {
+      "question": "Will the Fed increase interest rates by 50+ bps after the June 2026 meeting?",
+      "slug": "will-the-fed-increase-interest-rates-by-50-bps-after-the-june-2026-meeting",
+      "outcomes": [
+        {
+          "outcome": "Yes",
+          "probability": 0.4
+        },
+        {
+          "outcome": "No",
+          "probability": 99.7
+        }
+      ],
+      "volume_usd": 4180236.0,
+      "liquidity": 716488.0,
+      "end_date": "2026-06-17T00:00:00Z",
+      "active": true,
+      "polymarket_url": "https://polymarket.com/event/fed-decision-in-june-825",
+      "embed_url": "https://embed.polymarket.com/market?market=will-the-fed-increase-interest-rates-by-50-bps-after-the-june-2026-meeting&height=300"
+    }
+  ],
+  "total_volume_usd": 16484687.0
+}

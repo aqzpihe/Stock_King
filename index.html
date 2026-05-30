@@ -142,6 +142,188 @@
       }
     }
 
+    /* ── Drum Picker ── */
+    .drum-picker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding-top: 4px;
+      user-select: none;
+    }
+
+    .drum-btn-y {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 300;
+      line-height: 1;
+      transition: transform .12s, opacity .12s;
+    }
+
+    .drum-btn-y:active { transform: scale(.84); opacity: .7; }
+    #drumPlus  { color: var(--color-success); }
+    #drumMinus { color: var(--color-error); font-size: 1.8rem; }
+
+    .drum-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 4px;
+    }
+
+    .drum-side-left,
+    .drum-side-right {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .drum-side-label {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      min-width: 14px;
+      text-align: center;
+      transition: opacity .2s;
+    }
+
+    .drum-btn-x {
+      flex-shrink: 0;
+      width: 28px;
+      height: 64px;
+      border-radius: 99px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: border-color .15s, color .15s, background .15s, opacity .2s;
+    }
+
+    .drum-btn-x:hover {
+      border-color: var(--color-text-muted);
+      background: var(--color-surface-offset);
+    }
+
+    .drum-btn-x:active { transform: scale(.88); }
+
+    .drum-btn-x.drum-disabled {
+      opacity: 0.2;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .drum-viewport {
+      flex: 1;
+      height: 231px;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
+      mask-image: linear-gradient(
+        to bottom,
+        transparent  0%,
+        black        28%,
+        black        72%,
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent  0%,
+        black        28%,
+        black        72%,
+        transparent 100%
+      );
+    }
+
+    .drum-viewport:active { cursor: grabbing; }
+
+    .drum-track {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+      padding: 4px 3px;
+    }
+
+    .drum-line {
+      flex-shrink: 0;
+      border-radius: 99px;
+      background: var(--color-text);
+    }
+
+    /* Drum date display */
+    .drum-date-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      letter-spacing: 0.04em;
+      gap: 0;
+    }
+    .drum-dp {
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: var(--color-text-muted);
+      transition: color .2s, background .2s;
+    }
+    .drum-dp-on {
+      color: var(--color-lavender);
+      background: var(--color-surface-offset);
+      font-weight: 600;
+    }
+    .drum-ds {
+      color: var(--color-text-faint);
+      font-size: 10px;
+      padding: 0 1px;
+    }
+
+    /* Mode tabs */
+    .drum-mode-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .drum-mode-tab {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      border: 1px solid transparent;
+      transition: all .15s;
+      line-height: 1.6;
+    }
+    .drum-mode-tab:hover { color: var(--color-text); }
+    .drum-mode-tab.active {
+      color: var(--color-text);
+      border-color: var(--color-border);
+      background: var(--color-surface-2);
+    }
+
+    /* 指定資料日期 select 當模式高亮 */
+    select.drum-active-select {
+      color: var(--color-lavender);
+      border-color: var(--color-lavender);
+      background: var(--color-lavender-highlight) !important;
+    }
+
+    /* Drum hidden when sidebar collapses */
+    @media (max-width: 1280px) {
+      .drum-picker { display: none; }
+    }
+
     /* ── Formula Modal ── */
     .modal-overlay {
       position: fixed;
@@ -224,16 +406,6 @@
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-section">
-          <div class="sidebar-title">時間範圍</div>
-          <button class="sidebar-item btn-range" data-range="1M"><span>📅</span><span>1 個月</span></button>
-          <button class="sidebar-item btn-range" data-range="3M"><span>📅</span><span>3 個月</span></button>
-          <button class="sidebar-item btn-range" data-range="6M"><span>📅</span><span>6 個月</span></button>
-          <button class="sidebar-item btn-range active" data-range="1Y" aria-pressed="true"><span>📅</span><span>1
-              年</span></button>
-          <button class="sidebar-item btn-range" data-range="3Y"><span>📅</span><span>3 年</span></button>
-          <button class="sidebar-item btn-range" data-range="ALL"><span>📅</span><span>全部</span></button>
-        </div>
-        <div class="sidebar-section">
           <div class="sidebar-title">指定資料日期</div>
           <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
             <select id="dataYear" title="年份" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
@@ -248,20 +420,30 @@
           </div>
           <button id="dataDateConfirm" class="btn-primary" style="width:100%; padding:6px; font-size:.8rem;">確認</button>
         </div>
-        <div class="sidebar-section">
-          <div class="sidebar-title">比較指數</div>
-          <button class="sidebar-item toggle-pill active" data-index="SP500"><span class="dot"
-              style="background:var(--chart-color-2)"></span><span>S&amp;P 500</span></button>
-          <button class="sidebar-item toggle-pill active" data-index="NASDAQCOM"><span class="dot"
-              style="background:var(--chart-color-3)"></span><span>NASDAQ</span></button>
-          <button class="sidebar-item toggle-pill" data-index="DJIA"><span class="dot"
-              style="background:var(--chart-color-4)"></span><span>道瓊工業</span></button>
-          <button class="sidebar-item toggle-pill" data-index="RUT"><span class="dot"
-              style="background:var(--chart-color-5)"></span><span>Russell 2000</span></button>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-title">功能</div>
-          <button class="sidebar-item" id="openExplainBtn"><span>📖</span><span>分數說明</span></button>
+
+        <!-- Drum Picker -->
+        <div class="sidebar-section drum-picker">
+          <div id="drumDateDisplay" class="drum-date-display"></div>
+          <button class="drum-btn-y" id="drumPlus" title="數值增加">+</button>
+          <div class="drum-row">
+            <div class="drum-side-left">
+              <span class="drum-side-label" id="drumLabelLeft"></span>
+              <button class="drum-btn-x" id="drumLeft">&#8249;</button>
+            </div>
+            <div class="drum-viewport" id="drumViewport">
+              <div class="drum-track" id="drumTrack"></div>
+            </div>
+            <div class="drum-side-right">
+              <button class="drum-btn-x" id="drumRight">&#8250;</button>
+              <span class="drum-side-label" id="drumLabelRight"></span>
+            </div>
+          </div>
+          <button class="drum-btn-y" id="drumMinus" title="數值減少">&#8722;</button>
+          <div class="drum-mode-tabs">
+            <span class="drum-mode-tab active" data-mode="0">年</span>
+            <span class="drum-mode-tab" data-mode="1">月</span>
+            <span class="drum-mode-tab" data-mode="2">日</span>
+          </div>
         </div>
       </aside>
 
@@ -784,6 +966,7 @@
     src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script src="./assets/js/drum.js"></script>
   <script src="./assets/js/data.js"></script>
   <script src="./assets/js/gauge.js"></script>
   <script src="./assets/js/charts.js"></script>

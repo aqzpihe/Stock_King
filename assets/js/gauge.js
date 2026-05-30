@@ -107,5 +107,53 @@ const GaugeChart = (() => {
     requestAnimationFrame(update);
   }
 
-  return { render };
+  // 渲染指定日期的 Gauge（接受預建的 scoreMaps）
+  function renderForDate(scoreMaps, dateStr) {
+    const macroVal = scoreMaps?.MACRO_SCORE?.get(dateStr);
+    const regimeVal = scoreMaps?.REGIME?.get(dateStr);
+    if (macroVal == null) return;
+
+    const score = macroVal;
+    const regimeNum = regimeVal != null ? Math.round(regimeVal) : 2;
+    const config = REGIME_CONFIG[regimeNum] || REGIME_CONFIG[2];
+    const arcColor = getArcColor(score);
+
+    const arcEl = document.getElementById('gaugeArc');
+    arcEl.style.stroke = arcColor;
+    arcEl.style.transition = 'stroke-dashoffset .8s cubic-bezier(0.25, 0.46, 0.45, 0.94), stroke .4s';
+    requestAnimationFrame(() => {
+      arcEl.setAttribute('stroke-dashoffset', getArcOffset(score));
+    });
+
+    const gaugeValueEl = document.getElementById('gaugeValue');
+    animateCounter(gaugeValueEl, score, 800);
+    gaugeValueEl.style.color = arcColor;
+
+    const badgeEl = document.getElementById('regimeBadge');
+    badgeEl.className = `regime-badge ${config.cls}`;
+    document.getElementById('regimeIcon').textContent = config.icon;
+    document.getElementById('regimeText').textContent = config.label;
+    document.getElementById('regimeDescription').textContent = config.desc;
+
+    const subContainer = document.getElementById('subScoreSummary');
+    subContainer.innerHTML = '';
+    const subLabels = {
+      CREDIT_SCORE:  { name: '信用',      color: 'var(--chart-color-2)' },
+      POLICY_SCORE:  { name: '政策',      color: 'var(--chart-color-3)' },
+      PRICEFX_SCORE: { name: '通膨/匯率', color: 'var(--chart-color-4)' },
+    };
+    for (const [key, meta] of Object.entries(subLabels)) {
+      const val = scoreMaps?.[key]?.get(dateStr);
+      if (val == null) continue;
+      const chip = document.createElement('div');
+      chip.className = 'info-chip';
+      chip.innerHTML =
+        `<span class="chip-label" style="color:${meta.color}">${meta.name}</span>` +
+        `<span class="chip-value tabular-nums" style="color:${val >= 0 ? 'var(--color-success)' : 'var(--color-error)'}">` +
+        `${val >= 0 ? '+' : ''}${val.toFixed(2)}</span>`;
+      subContainer.appendChild(chip);
+    }
+  }
+
+  return { render, renderForDate };
 })();

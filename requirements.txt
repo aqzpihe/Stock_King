@@ -1,0 +1,6 @@
+supabase
+pandas
+numpy
+requests
+openpyxl
+fredapi

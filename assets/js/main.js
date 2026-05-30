@@ -174,6 +174,18 @@
     const dimRows = await DataService.fetchDimScores();
     dimScores = DataService.getLatestDimScores(dimRows);
     STATE.rawData = await DataService.fetchRawData();
+
+    // 將實際資料日期注入 DrumPicker（day 模式只跳到有資料的交易日）
+    if (typeof DrumPicker !== 'undefined' && STATE.data?.scores?.MACRO_SCORE?.length) {
+      const dates = STATE.data.scores.MACRO_SCORE.map(d => d.date);
+      DrumPicker.setValidDates(dates);
+    }
+
+    // 建立各分數序列的日期索引 Map，供確認按鈕查指定日期分數
+    STATE.scoreMaps = {};
+    for (const [key, arr] of Object.entries(STATE.data.scores)) {
+      STATE.scoreMaps[key] = new Map(arr.map(d => [d.date, d.value]));
+    }
   } catch (err) {
     document.getElementById('mainContent').innerHTML = `
       <div class="module-placeholder">
@@ -245,13 +257,73 @@
     // Default selected date
     STATE.selectedDataDate = `${dataYear.value}-${dataMonth.value}-${dataDay.value}`;
 
+    // 從日期字串同步到三個 select（供 DrumPicker 呼叫）
+    window.syncDrumDate = (dateStr) => {
+      const [y, m, d] = dateStr.split('-');
+      if (!dateTree[y]) return;
+
+      dataYear.value = y;
+
+      const months = Object.keys(dateTree[y]).sort().reverse();
+      populateSelect(dataMonth, months);
+      if (dateTree[y][m]) dataMonth.value = m;
+
+      const days = dateTree[y]?.[m] ? [...dateTree[y][m]].sort().reverse() : [];
+      populateSelect(dataDay, days);
+      if (dateTree[y]?.[m]?.includes(d)) dataDay.value = d;
+    };
+
+    // 初始化時將 drum 目前日期同步到 select
+    if (typeof DrumPicker !== 'undefined') {
+      const dObj = DrumPicker.getDate();
+      const dStr = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+      window.syncDrumDate(dStr);
+    }
+
+    // Drum 選日期時即時同步到 select，並高亮當前模式對應的 select
+    document.addEventListener('drumDateChange', (e) => {
+      if (window.syncDrumDate) window.syncDrumDate(e.detail.date);
+      const mode = e.detail.mode;
+      ['dataYear', 'dataMonth', 'dataDay'].forEach(id => {
+        document.getElementById(id)?.classList.remove('drum-active-select');
+      });
+      const activeId = mode === 'year' ? 'dataYear' : mode === 'month' ? 'dataMonth' : 'dataDay';
+      document.getElementById(activeId)?.classList.add('drum-active-select');
+    });
+
     // Confirm Button
     dataDateConfirm.addEventListener('click', () => {
       const y = dataYear.value;
       const m = dataMonth.value;
       const d = dataDay.value;
       STATE.selectedDataDate = `${y}-${m}-${d}`;
-      console.log('User confirmed data date:', STATE.selectedDataDate);
+
+      // 四大面向：從 dashboard_data.json 按日期查詢對應分數
+      // POLICY_SCORE 是 DIM2/2 正規化後的值，還原要 ×2
+      const SCORE_TO_DIM = {
+        DIM1_SCORE: { src: 'CREDIT_SCORE',  factor: 1.0 },
+        DIM2_SCORE: { src: 'POLICY_SCORE',   factor: 2.0 },
+        DIM3_SCORE: null,
+        DIM4_SCORE: { src: 'PRICEFX_SCORE', factor: 1.0 },
+      };
+      const newDimScores = {};
+      for (const [dimKey, mapping] of Object.entries(SCORE_TO_DIM)) {
+        if (!mapping) { newDimScores[dimKey] = null; continue; }
+        const val = STATE.scoreMaps?.[mapping.src]?.get(STATE.selectedDataDate);
+        newDimScores[dimKey] = val != null ? val * mapping.factor : null;
+      }
+      updateDimCards(newDimScores);
+
+      // 環境總分 Gauge
+      GaugeChart.renderForDate(STATE.scoreMaps, STATE.selectedDataDate);
+
+      // Info bar
+      const macroVal = STATE.scoreMaps?.MACRO_SCORE?.get(STATE.selectedDataDate);
+      if (macroVal != null) {
+        document.getElementById('infoLatest').textContent =
+          `${macroVal >= 0 ? '+' : ''}${macroVal.toFixed(3)} (${STATE.selectedDataDate})`;
+      }
+
       if (window.refreshActiveDimDetail) {
         window.refreshActiveDimDetail();
       }
@@ -259,6 +331,7 @@
   }
 
   // ===== Init Dimension Scores (Section B) =====
+  STATE.currentDimScores = { ...dimScores };
   buildDimSection(dimScores);
 
   // ===== Init Sub-indicator Pills (Section D) =====
@@ -441,7 +514,7 @@
     window.refreshActiveDimDetail = () => {
       if (activeDimIdx === null) return;
       const dim = DIMS[activeDimIdx];
-      const s = scores[dim.key] ?? null;
+      const s = STATE.currentDimScores?.[dim.key] ?? null;
       const sStr = s !== null ? `${s >= 0 ? '+' : ''}${s.toFixed(3)}` : '—';
       const sCls = s > 0 ? 'positive' : s < 0 ? 'negative' : '';
 
@@ -519,6 +592,36 @@
 
     // 填入 Formula Modal 表格
     _fillFormulaModal(scores);
+  }
+
+  // ===== Section B: 更新四大面向分數卡片 =====
+  function updateDimCards(newScores) {
+    STATE.currentDimScores = newScores;
+    const container = document.getElementById('dimGaugesContainer');
+    DIMS.forEach((dim, i) => {
+      const s = newScores[dim.key] ?? null;
+      const sStr = s !== null ? `${s >= 0 ? '+' : ''}${s.toFixed(3)}` : '—';
+      const sCls = s !== null ? (s > 0 ? 'positive' : s < 0 ? 'negative' : 'neutral') : 'neutral';
+      const gaugeScore = s !== null ? s : 0;
+
+      const card = container.querySelectorAll('.dim-gauge-card')[i];
+      if (!card) return;
+
+      const scoreEl = card.querySelector('.dim-score-top');
+      if (scoreEl) {
+        scoreEl.textContent = sStr;
+        scoreEl.className = `dim-score-top ${sCls}`;
+      }
+
+      const oldSvg = card.querySelector('.dim-gauge-svg');
+      if (oldSvg) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _buildMiniGaugeSVG(gaugeScore, dim.color);
+        oldSvg.replaceWith(tmp.firstElementChild);
+      }
+    });
+    _fillFormulaModal(newScores);
+    if (window.refreshActiveDimDetail) window.refreshActiveDimDetail();
   }
 
   // ===== Sub-indicator Pill Builder =====

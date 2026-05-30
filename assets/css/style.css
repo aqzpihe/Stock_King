@@ -41,6 +41,10 @@ html { scroll-behavior: smooth; }
   --color-error-hover:      #e74c3c;
   --color-error-highlight:  #2d1010;
 
+  /* 薰衣草紫（日期選擇高亮） */
+  --color-lavender:           #c4a8e0;
+  --color-lavender-highlight: rgba(196, 168, 224, 0.18);
+
   /* 警示（琥珀黃） */
   --color-warning:          #d4a017;
   --color-warning-highlight:#2a1f05;
@@ -101,6 +105,8 @@ html { scroll-behavior: smooth; }
   --color-success-highlight:#e8f8ef;
   --color-error-highlight:  #fce8e6;
   --color-warning-highlight:#fef9e7;
+  --color-lavender:           #7c5cbf;
+  --color-lavender-highlight: rgba(124, 92, 191, 0.12);
   --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
   --shadow-md:  0 4px 12px rgba(0,0,0,.1);
   --shadow-lg:  0 8px 32px rgba(0,0,0,.12);

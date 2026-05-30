@@ -730,11 +730,12 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-faint); }
 
 /* ===================== Responsive ===================== */
-@media (max-width: 1280px) {
+@media (max-width: 900px) {
   .dashboard-grid { grid-template-columns: var(--sidebar-collapsed) 1fr; }
   .sidebar { padding: var(--space-md) var(--space-xs); }
   .sidebar-title, .sidebar-item span { display: none; }
   .sidebar-item { justify-content: center; padding: var(--space-sm); }
+  .drum-picker { display: none; }
 }
 @media (max-width: 768px) {
   .hamburger { display: flex; }

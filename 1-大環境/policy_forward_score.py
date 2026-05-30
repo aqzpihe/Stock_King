@@ -38,9 +38,15 @@ import pandas as pd
 # 0. 路徑配置
 # ─────────────────────────────────────────
 BASE_DIR          = Path(__file__).parent
-SEP_CSV           = BASE_DIR / "sep_data.csv"
-POLYMARKET_JSON   = BASE_DIR / "polymarket_fed.json"
-OUT_JSON          = BASE_DIR / "policy_forward_score.json"
+SEP_CSV           = BASE_DIR / "data" / "sep_data.csv"
+POLYMARKET_JSON   = BASE_DIR / "data" / "polymarket_fed.json"
+OUT_JSON          = BASE_DIR / "data" / "policy_forward_score.json"
+
+# 向後相容：若 data/ 下不存在，嘗試舊位置
+if not SEP_CSV.exists() and (BASE_DIR / "sep_data.csv").exists():
+    SEP_CSV = BASE_DIR / "sep_data.csv"
+if not POLYMARKET_JSON.exists() and (BASE_DIR / "polymarket_fed.json").exists():
+    POLYMARKET_JSON = BASE_DIR / "polymarket_fed.json"
 
 # 合併權重：70% 點陣圖 + 30% Polymarket
 W_DOTPLOT    = 0.70

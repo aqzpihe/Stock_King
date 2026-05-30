@@ -6,6 +6,7 @@
 const DataService = (() => {
   // --- Config ---
   const LOCAL_JSON_PATH = './assets/data/dashboard_data.json';
+  const SCORES_CSV_PATH = './assets/data/scores.csv';
   const SHEET_ID = '1Qt9QcPKb606b9h0bm7fQQ5dqDWEqLiU7vfxjFTmJITU';
 
   // Google Sheets tab GIDs (to be configured when sheets are populated)
@@ -18,6 +19,7 @@ const DataService = (() => {
   // --- In-memory cache ---
   let _cache = null;
   let _loading = null;
+  let _dimCache = null;
 
   // --- Core fetch ---
   async function fetchData() {
@@ -110,9 +112,67 @@ const DataService = (() => {
     return arr.slice(-n);
   }
 
+  // ── DIM 分數 CSV 讀取 ──
+  async function fetchDimScores() {
+    if (_dimCache) return _dimCache;
+    try {
+      const resp = await fetch(SCORES_CSV_PATH);
+      if (!resp.ok) throw new Error(`scores.csv 載入失敗 (${resp.status})`);
+      const text = await resp.text();
+      _dimCache = _parseCSV(text);   // 複用既有的 _parseCSV
+      return _dimCache;
+    } catch (e) {
+      console.warn('[DataService] fetchDimScores:', e.message);
+      return [];   // 找不到時 graceful 降級，不影響其他功能
+    }
+  }
+
+  // 取最後一行的四大面向分數
+  function getLatestDimScores(rows) {
+    if (!rows || !rows.length) return {};
+    const latest = rows[rows.length - 1];
+    const keys = ['DIM1_SCORE', 'DIM2_SCORE', 'DIM2_CREDIBILITY', 'DIM3_SCORE', 'DIM4_SCORE'];
+    const result = {};
+    for (const k of keys) {
+      const raw = latest[k];
+      result[k] = (raw !== undefined && raw !== '') ? parseFloat(raw) : null;
+    }
+    return result;
+  }
+
+  // ── Raw Data CSV 讀取 (從 1-大環境) ──
+  let _rawDataCache = null;
+  async function fetchRawData() {
+    if (_rawDataCache) return _rawDataCache;
+    try {
+      const resp = await fetch('./1-大環境/data/data.csv');
+      if (!resp.ok) throw new Error(`data.csv 載入失敗 (${resp.status})`);
+      const text = await resp.text();
+      const rows = _parseCSV(text);
+      
+      // 依日期和 ticker 分組
+      const dateMap = {};
+      for (const r of rows) {
+        if (!r.observation_date) continue;
+        if (!dateMap[r.observation_date]) {
+          dateMap[r.observation_date] = {};
+        }
+        dateMap[r.observation_date][r.ticker] = r.raw_value;
+      }
+      _rawDataCache = dateMap;
+      return dateMap;
+    } catch (e) {
+      console.warn('[DataService] fetchRawData:', e.message);
+      return {};
+    }
+  }
+
   // --- Public API ---
   return {
     fetchData,
+    fetchDimScores,
+    fetchRawData,
+    getLatestDimScores,
     filterByRange,
     getLatestScore,
     getLatestRegime,

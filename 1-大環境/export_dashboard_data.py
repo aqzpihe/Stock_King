@@ -12,57 +12,102 @@ from macro_scorer import compute_all_scores
 from policy_forward_score import PolicyForwardScoreEngine
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRED_EXCEL   = os.path.join(BASE_DIR, "fred_data.xlsx")
-INDEX_EXCEL  = os.path.join(BASE_DIR, "indices_data.xlsx")
+DATA_DIR = os.path.join(BASE_DIR, "data")
+FRED_EXCEL   = os.path.join(DATA_DIR, "fred_data.xlsx")
+INDEX_EXCEL  = os.path.join(DATA_DIR, "indices_data.xlsx")
 OUTPUT_JSON  = os.path.join(BASE_DIR, "dashboard_data.json")
+
+# 向後相容：若 data/ 下不存在，嘗試舊位置
+if not os.path.exists(FRED_EXCEL) and os.path.exists(os.path.join(BASE_DIR, "fred_data.xlsx")):
+    FRED_EXCEL = os.path.join(BASE_DIR, "fred_data.xlsx")
+if not os.path.exists(INDEX_EXCEL) and os.path.exists(os.path.join(BASE_DIR, "indices_data.xlsx")):
+    INDEX_EXCEL = os.path.join(BASE_DIR, "indices_data.xlsx")
 
 
 def load_fred_from_excel():
-    """從 fred_data.xlsx 讀取原始資料，組裝成 macro_data_loader 相同的 DataFrame"""
-    print("=== 從 fred_data.xlsx 讀取資料 ===\n")
+    """從 fred_data.xlsx 讀取原始資料，組裝成 macro_data_loader 相同的 DataFrame
+
+    同時讀取 V1 原有工作表與 V2 新增工作表。
+    若某工作表不存在（尚未執行 FRED.py 更新），該群組會自動跳過。
+    """
+    print("=== 從 fred_data.xlsx 讀取資料 (V2) ===\n")
 
     xl = pd.ExcelFile(FRED_EXCEL)
+    sheets = xl.sheet_names
     all_series = {}
 
-    df_credit = xl.parse("信用利差", parse_dates=["date"], index_col="date")
-    for col in ["CPN3M", "DTB6", "DPRIME", "DBAA", "DGS10"]:
-        if col in df_credit.columns:
-            all_series[col] = df_credit[col]
-            print(f"  [OK] {col}: {df_credit[col].dropna().shape[0]} 筆")
+    def _read_sheet(sheet_name, cols):
+        """讀取指定工作表的欄位，回傳 {col: Series} dict"""
+        if sheet_name not in sheets:
+            print(f"  [SKIP] 工作表 '{sheet_name}' 不存在（請重新執行 FRED.py）")
+            return
+        df_s = xl.parse(sheet_name, parse_dates=["date"], index_col="date")
+        for col in cols:
+            if col in df_s.columns:
+                all_series[col] = df_s[col]
+                print(f"  [OK] {col}: {df_s[col].dropna().shape[0]} 筆")
 
-    df_policy = xl.parse("貨幣政策", parse_dates=["date"], index_col="date")
-    if "DFF" in df_policy.columns:
-        all_series["DFF"] = df_policy["DFF"]
-        print(f"  [OK] DFF: {df_policy['DFF'].dropna().shape[0]} 筆")
+    # ── V1：原有工作表 ────────────────────────────────────────────
+    print("[V1] 信用利差")
+    _read_sheet("信用利差", ["CPN3M", "DTB6", "DPRIME", "DBAA", "DGS10"])
 
-    df_inf = xl.parse("通膨", parse_dates=["date"], index_col="date")
-    if "CPIAUCSL" in df_inf.columns:
-        cpi = df_inf["CPIAUCSL"].dropna()
-        inf_yoy = (cpi / cpi.shift(12) - 1) * 100
-        inf_yoy = inf_yoy.dropna()
-        inf_yoy.name = "INF_YOY"
-        all_series["INF_YOY"] = inf_yoy
-        print(f"  [CALC] INF_YOY: {len(inf_yoy)} 筆")
+    print("[V1] 貨幣政策")
+    _read_sheet("貨幣政策", ["DFF"])
 
-    df_fx = xl.parse("匯率", parse_dates=["date"], index_col="date")
-    for col in ["DTWEXBGS", "EMVEXRATES"]:
-        if col in df_fx.columns:
-            all_series[col] = df_fx[col]
-            print(f"  [OK] {col}: {df_fx[col].dropna().shape[0]} 筆")
+    print("[V1] 通膨 → INF_YOY")
+    if "通膨" in sheets:
+        df_inf = xl.parse("通膨", parse_dates=["date"], index_col="date")
+        if "CPIAUCSL" in df_inf.columns:
+            cpi = df_inf["CPIAUCSL"].dropna()
+            inf_yoy = (cpi / cpi.shift(12) - 1) * 100
+            inf_yoy = inf_yoy.dropna()
+            inf_yoy.name = "INF_YOY"
+            all_series["INF_YOY"] = inf_yoy
+            print(f"  [CALC] INF_YOY: {len(inf_yoy)} 筆")
 
-    if "股市指數" in xl.sheet_names:
-        df_idx = xl.parse("股市指數", parse_dates=["date"], index_col="date")
-        if "DJIA" in df_idx.columns:
-            all_series["DJIA"] = df_idx["DJIA"]
-            print(f"  [OK] DJIA: {df_idx['DJIA'].dropna().shape[0]} 筆")
+    print("[V1] 匯率")
+    _read_sheet("匯率", ["DTWEXBGS", "EMVEXRATES"])
 
+    print("[V1] 股市指數")
+    _read_sheet("股市指數", ["DJIA"])
+
+    # ── V2：新增工作表 ────────────────────────────────────────────
+    print("\n[V2] 信用壓力（違約率）")
+    _read_sheet("信用壓力", ["DRBLACBS"])
+
+    print("[V2] 衰退預警（殖利率倒掛）")
+    _read_sheet("衰退預警", ["T10Y2Y"])
+
+    print("[V2] 勞動市場動能V2")
+    _read_sheet("勞動市場動能V2", ["JTSJOL", "JTSQUR"])
+
+    print("[V2] 創新創造")
+    _read_sheet("創新創造", ["BABATOT"])
+
+    print("[V2] 國際資本")
+    _read_sheet("國際資本", ["BOPBCA"])
+
+    print("[V2] 淨流動性")
+    _read_sheet("淨流動性", ["WALCL", "WTREGEN", "RRPONTSYD"])
+
+    # ── 組裝 DataFrame ────────────────────────────────────────────
     df = pd.DataFrame(all_series)
     full_idx = pd.bdate_range(df.index.min(), df.index.max())
     df = df.reindex(full_idx).ffill()
     df = df[df.index >= cfg.DATA_START_DATE]
 
+    # ── 衍生：淨流動性 ────────────────────────────────────────────
+    # Net Liquidity (B$) = WALCL(M$)/1000 - WTREGEN(B$) - RRPONTSYD(B$)
+    if all(c in df.columns for c in ["WALCL", "WTREGEN", "RRPONTSYD"]):
+        df["NET_LIQUIDITY"] = df["WALCL"] / 1000 - df["WTREGEN"] - df["RRPONTSYD"]
+        latest_liq = df["NET_LIQUIDITY"].dropna()
+        if not latest_liq.empty:
+            print(f"  [CALC] NET_LIQUIDITY: {len(latest_liq)} 筆"
+                  f"  (最新: {latest_liq.iloc[-1]:.1f} B$)")
+
     print(f"\n=== DataFrame: {df.shape[0]} 天 x {df.shape[1]} 欄 ===")
     return df
+
 
 
 def load_indices_from_excel():

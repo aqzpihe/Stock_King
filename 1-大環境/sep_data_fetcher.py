@@ -41,8 +41,9 @@ FRED_API_KEY = os.getenv("FRED_API", "")
 KAGGLE_API_KEY = os.getenv("KAGGLE_API", "")
 
 KAGGLE_DIR   = BASE_DIR / "kaggle_dotplot"
-OUT_EXCEL    = BASE_DIR / "sep_data.xlsx"
-OUT_CSV      = BASE_DIR / "sep_data.csv"
+OUT_EXCEL    = BASE_DIR / "data" / "sep_data.xlsx"
+OUT_CSV      = BASE_DIR / "data" / "sep_data.csv"
+os.makedirs(BASE_DIR / "data", exist_ok=True)
 
 # ── FOMC 會議日期對照表（YYYY QN → meeting_date）──
 # SEP 只在 3/6/9/12 月的會議公布（每年 4 次）

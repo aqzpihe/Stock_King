@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,343 +11,784 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/animations.css">
+  <style>
+    /* ── Section B icon button ── */
+    .card-title-row .icon-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm, 6px);
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all .2s;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .card-title-row .icon-btn:hover {
+      color: var(--color-text);
+      border-color: var(--color-primary);
+      background: var(--color-primary-highlight);
+    }
+
+    /* ── Dimension Score Section ── */
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .dim-gauges-container {
+      display: flex;
+      gap: 8px;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      padding: 16px 0 8px;
+    }
+
+    .dim-gauge-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1 1 120px;
+      max-width: 160px;
+    }
+
+    .dim-score-top {
+      font-size: 1rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .02em;
+    }
+
+    .dim-score-top.positive {
+      color: var(--color-success, #3fba74);
+    }
+
+    .dim-score-top.negative {
+      color: var(--color-error, #f87171);
+    }
+
+    .dim-score-top.neutral {
+      color: var(--color-warning, #f59e0b);
+    }
+
+    .dim-gauge-svg {
+      width: 100%;
+      max-width: 140px;
+      overflow: visible;
+    }
+
+    .dim-label-btn {
+      background: var(--color-surface-2);
+      border: 1.5px solid var(--color-border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: .78rem;
+      font-family: inherit;
+      color: var(--color-text-muted);
+      text-align: center;
+      line-height: 1.4;
+      transition: border-color .18s, color .18s, background .18s;
+    }
+
+    .dim-label-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .dim-label-btn.active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
+
+    .dim-label-btn small {
+      display: block;
+      font-size: .7rem;
+      color: var(--color-text-faint);
+      margin-top: 2px;
+    }
+
+    .dim-label-btn.active small {
+      color: inherit;
+      opacity: .75;
+    }
+
+    /* ── Detail Panel ── */
+    .dim-detail-panel {
+      margin-top: 16px;
+      border-top: 1px solid var(--color-divider);
+      padding-top: 16px;
+      animation: dimFadeIn .2s ease;
+    }
+
+    @keyframes dimFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Formula Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-box {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      max-width: 740px;
+      width: 100%;
+      max-height: 82vh;
+      overflow-y: auto;
+      position: relative;
+      animation: dimFadeIn .2s ease;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
+
+    .modal-close:hover {
+      color: var(--color-text);
+      background: var(--color-surface-2);
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="app-shell">
+  <div class="app-shell">
 
-  <!-- ============= Header ============= -->
-  <header class="header">
-    <button class="hamburger" id="hamburgerBtn" aria-label="選單">☰</button>
-    <div class="header-logo">
-      <img src="./logo.png" alt="Stock King Logo">
-      <span>Stock King</span>
-    </div>
-    <nav class="tab-nav" role="tablist" aria-label="模組導覽">
-      <button class="tab-btn" role="tab" aria-selected="true"  data-module="m1-macro"       id="tabM1"><span class="tab-icon">📊</span><span class="tab-text">大環境</span></button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-module="m2-fundamental" id="tabM2" disabled><span class="tab-icon">📈</span><span class="tab-text">基本面</span><span class="badge-soon">即將推出</span></button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-module="m3-technical"   id="tabM3" disabled><span class="tab-icon">📉</span><span class="tab-text">技術指標</span><span class="badge-soon">即將推出</span></button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-module="m4-strategy"    id="tabM4" disabled><span class="tab-icon">🎯</span><span class="tab-text">交易策略</span><span class="badge-soon">即將推出</span></button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-module="m5-ai"          id="tabM5" disabled><span class="tab-icon">🤖</span><span class="tab-text">AI 決策</span><span class="badge-soon">即將推出</span></button>
-    </nav>
-    <div class="header-actions">
-      <button class="icon-btn" id="themeToggle" aria-label="切換主題" title="亮/暗模式">🌙</button>
-    </div>
-  </header>
-
-  <!-- ============= Dashboard Grid ============= -->
-  <div class="dashboard-grid">
-
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-title">時間範圍</div>
-        <button class="sidebar-item btn-range" data-range="1M"><span>📅</span><span>1 個月</span></button>
-        <button class="sidebar-item btn-range" data-range="3M"><span>📅</span><span>3 個月</span></button>
-        <button class="sidebar-item btn-range" data-range="6M"><span>📅</span><span>6 個月</span></button>
-        <button class="sidebar-item btn-range active" data-range="1Y" aria-pressed="true"><span>📅</span><span>1 年</span></button>
-        <button class="sidebar-item btn-range" data-range="3Y"><span>📅</span><span>3 年</span></button>
-        <button class="sidebar-item btn-range" data-range="ALL"><span>📅</span><span>全部</span></button>
+    <!-- ============= Header ============= -->
+    <header class="header">
+      <button class="hamburger" id="hamburgerBtn" aria-label="選單">☰</button>
+      <div class="header-logo">
+        <img src="./logo.png" alt="Stock King Logo">
+        <span>Stock King</span>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-title">比較指數</div>
-        <button class="sidebar-item toggle-pill active" data-index="SP500"><span class="dot" style="background:var(--chart-color-2)"></span><span>S&amp;P 500</span></button>
-        <button class="sidebar-item toggle-pill active" data-index="NASDAQCOM"><span class="dot" style="background:var(--chart-color-3)"></span><span>NASDAQ</span></button>
-        <button class="sidebar-item toggle-pill" data-index="DJIA"><span class="dot" style="background:var(--chart-color-4)"></span><span>道瓊工業</span></button>
-        <button class="sidebar-item toggle-pill" data-index="RUT"><span class="dot" style="background:var(--chart-color-5)"></span><span>Russell 2000</span></button>
+      <nav class="tab-nav" role="tablist" aria-label="模組導覽">
+        <button class="tab-btn" role="tab" aria-selected="true" data-module="m1-macro" id="tabM1"><span
+            class="tab-icon">📊</span><span class="tab-text">大環境</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-module="m2-fundamental" id="tabM2" disabled><span
+            class="tab-icon">📈</span><span class="tab-text">基本面</span><span class="badge-soon">即將推出</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-module="m3-technical" id="tabM3" disabled><span
+            class="tab-icon">📉</span><span class="tab-text">技術指標</span><span class="badge-soon">即將推出</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-module="m4-strategy" id="tabM4" disabled><span
+            class="tab-icon">🎯</span><span class="tab-text">交易策略</span><span class="badge-soon">即將推出</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-module="m5-ai" id="tabM5" disabled><span
+            class="tab-icon">🤖</span><span class="tab-text">AI 決策</span><span class="badge-soon">即將推出</span></button>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" aria-label="切換主題" title="亮/暗模式">🌙</button>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-title">功能</div>
-        <button class="sidebar-item" id="openExplainBtn"><span>📖</span><span>分數說明</span></button>
-      </div>
-    </aside>
+    </header>
 
-    <!-- Main Content -->
-    <main class="main-content" id="mainContent">
+    <!-- ============= Dashboard Grid ============= -->
+    <div class="dashboard-grid">
 
-      <!-- ==================== M1: 大環境 ==================== -->
-      <div class="module-panel" id="m1-macro">
-
-        <!-- Info Bar -->
-        <div class="info-bar reveal">
-          <div class="info-chip"><span class="chip-label">資料更新</span><span class="chip-value" id="infoGenAt">—</span></div>
-          <div class="info-chip"><span class="chip-label">最新評分</span><span class="chip-value" id="infoLatest">—</span></div>
-          <div class="info-chip"><span class="chip-label">Regime</span><span class="chip-value" id="infoRegime">—</span></div>
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">時間範圍</div>
+          <button class="sidebar-item btn-range" data-range="1M"><span>📅</span><span>1 個月</span></button>
+          <button class="sidebar-item btn-range" data-range="3M"><span>📅</span><span>3 個月</span></button>
+          <button class="sidebar-item btn-range" data-range="6M"><span>📅</span><span>6 個月</span></button>
+          <button class="sidebar-item btn-range active" data-range="1Y" aria-pressed="true"><span>📅</span><span>1
+              年</span></button>
+          <button class="sidebar-item btn-range" data-range="3Y"><span>📅</span><span>3 年</span></button>
+          <button class="sidebar-item btn-range" data-range="ALL"><span>📅</span><span>全部</span></button>
         </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">指定資料日期</div>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+            <select id="dataYear" title="年份" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
+              <option value="">選擇年份</option>
+            </select>
+            <select id="dataMonth" title="月份" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
+              <option value="">選擇月份</option>
+            </select>
+            <select id="dataDay" title="日期" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
+              <option value="">選擇日期</option>
+            </select>
+          </div>
+          <button id="dataDateConfirm" class="btn-primary" style="width:100%; padding:6px; font-size:.8rem;">確認</button>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">比較指數</div>
+          <button class="sidebar-item toggle-pill active" data-index="SP500"><span class="dot"
+              style="background:var(--chart-color-2)"></span><span>S&amp;P 500</span></button>
+          <button class="sidebar-item toggle-pill active" data-index="NASDAQCOM"><span class="dot"
+              style="background:var(--chart-color-3)"></span><span>NASDAQ</span></button>
+          <button class="sidebar-item toggle-pill" data-index="DJIA"><span class="dot"
+              style="background:var(--chart-color-4)"></span><span>道瓊工業</span></button>
+          <button class="sidebar-item toggle-pill" data-index="RUT"><span class="dot"
+              style="background:var(--chart-color-5)"></span><span>Russell 2000</span></button>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">功能</div>
+          <button class="sidebar-item" id="openExplainBtn"><span>📖</span><span>分數說明</span></button>
+        </div>
+      </aside>
 
-        <!-- Section A: Gauge -->
-        <section class="card section-gap reveal" id="sectionA">
-          <div class="card-title">環境總分 Macro Score</div>
-          <div class="gauge-section">
-            <div class="gauge-container" id="gaugeContainer">
-              <svg viewBox="0 0 200 110" id="gaugeSvg">
-                <!-- Background arc -->
-                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--color-border)" stroke-width="12" stroke-linecap="round"/>
-                <!-- Value arc (animated) -->
-                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--color-warning)" stroke-width="12" stroke-linecap="round"
-                      id="gaugeArc" stroke-dasharray="251.3" stroke-dashoffset="251.3"/>
-                <!-- Tick marks -->
-                <text x="15" y="108" font-size="8" fill="var(--color-text-faint)" text-anchor="middle">-1</text>
-                <text x="100" y="18" font-size="8" fill="var(--color-text-faint)" text-anchor="middle">0</text>
-                <text x="185" y="108" font-size="8" fill="var(--color-text-faint)" text-anchor="middle">+1</text>
-              </svg>
-              <div class="gauge-center-text">
-                <div class="gauge-score tabular-nums" id="gaugeValue">—</div>
-                <div class="gauge-label">MACRO SCORE</div>
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+
+        <!-- ==================== M1: 大環境 ==================== -->
+        <div class="module-panel" id="m1-macro">
+
+          <!-- Info Bar -->
+          <div class="info-bar reveal">
+            <div class="info-chip"><span class="chip-label">資料更新</span><span class="chip-value" id="infoGenAt">—</span>
+            </div>
+            <div class="info-chip"><span class="chip-label">最新評分</span><span class="chip-value" id="infoLatest">—</span>
+            </div>
+            <div class="info-chip"><span class="chip-label">Regime</span><span class="chip-value"
+                id="infoRegime">—</span></div>
+          </div>
+
+          <!-- Section A: Gauge -->
+          <section class="card section-gap reveal" id="sectionA">
+            <div class="card-title">環境總分 Macro Score</div>
+            <div class="gauge-section">
+              <div class="gauge-container" id="gaugeContainer">
+                <svg viewBox="0 0 200 110" id="gaugeSvg">
+                  <!-- Background arc -->
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--color-border)" stroke-width="12"
+                    stroke-linecap="round" />
+                  <!-- Value arc (animated) -->
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--color-warning)" stroke-width="12"
+                    stroke-linecap="round" id="gaugeArc" stroke-dasharray="251.3" stroke-dashoffset="251.3" />
+                  <!-- Tick marks -->
+                  <text x="15" y="108" font-size="8" fill="var(--color-text-faint)" text-anchor="middle">-1</text>
+                  <text x="100" y="18" font-size="8" fill="var(--color-text-faint)" text-anchor="middle">0</text>
+                  <text x="185" y="108" font-size="8" fill="var(--color-text-faint)" text-anchor="middle">+1</text>
+                </svg>
+                <div class="gauge-center-text">
+                  <div class="gauge-score tabular-nums" id="gaugeValue">—</div>
+                  <div class="gauge-label">MACRO SCORE</div>
+                </div>
+              </div>
+              <div class="gauge-info">
+                <div id="regimeBadge" class="regime-badge cautious" style="margin-bottom:12px">
+                  <span id="regimeIcon">⚖️</span>
+                  <span id="regimeText">載入中…</span>
+                </div>
+                <p style="color:var(--color-text-muted);font-size:.85rem;line-height:1.6" id="regimeDescription">
+                  根據信用利差、貨幣政策與通膨匯率三大模組的加權聚合，判定目前市場所處的景氣循環階段。
+                </p>
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap" id="subScoreSummary">
+                  <!-- dynamically filled -->
+                </div>
+                <button class="btn-ghost openExplainBtn" style="margin-top:16px" id="openExplainBtn2">
+                  📖 查看評分說明書
+                </button>
               </div>
             </div>
-            <div class="gauge-info">
-              <div id="regimeBadge" class="regime-badge cautious" style="margin-bottom:12px">
-                <span id="regimeIcon">⚖️</span>
-                <span id="regimeText">載入中…</span>
-              </div>
-              <p style="color:var(--color-text-muted);font-size:.85rem;line-height:1.6" id="regimeDescription">
-                根據信用利差、貨幣政策與通膨匯率三大模組的加權聚合，判定目前市場所處的景氣循環階段。
-              </p>
-              <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap" id="subScoreSummary">
-                <!-- dynamically filled -->
-              </div>
-              <button class="btn-ghost openExplainBtn" style="margin-top:16px" id="openExplainBtn2">
-                📖 查看評分說明書
-              </button>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Section B: KPI Cards -->
-        <section class="card section-gap reveal" id="sectionB">
-          <div class="card-title">子指標評分 Sub-Indicators</div>
-          <div class="kpi-grid stagger-children" id="kpiGrid">
-            <!-- dynamically filled -->
-          </div>
-        </section>
-
-        <!-- Section C: Macro Score vs Indices -->
-        <section class="card section-gap reveal" id="sectionC">
-          <div class="card-title">大環境分數 vs. 美股指數</div>
-          <div class="controls-row">
-            <div class="control-group">
-              <span class="control-label">時間</span>
-              <button class="btn-range" data-range="1M">1M</button>
-              <button class="btn-range" data-range="3M">3M</button>
-              <button class="btn-range" data-range="6M">6M</button>
-              <button class="btn-range" data-range="1Y" aria-pressed="true">1Y</button>
-              <button class="btn-range" data-range="3Y">3Y</button>
-              <button class="btn-range" data-range="ALL">ALL</button>
-              <button class="btn-range" data-range="CUSTOM">自訂</button>
+          <!-- Section B: Dimension Scores -->
+          <section class="card section-gap reveal" id="sectionB">
+            <div class="card-title-row">
+              <div class="card-title">四大面向評分 Dimension Scores</div>
+              <button class="icon-btn" id="dimFormulaBtn" title="查看計算公式" aria-label="四大面向計算公式">⚙️</button>
             </div>
-            <div class="custom-range" id="customRange">
-              <input type="date" class="date-input" id="dateFrom">
-              <span style="color:var(--color-text-muted);font-size:.78rem">~</span>
-              <input type="date" class="date-input" id="dateTo">
-              <button class="btn-primary" id="applyCustom" style="padding:4px 12px;font-size:.78rem">套用</button>
-            </div>
-          </div>
-          <div class="controls-row">
-            <div class="control-group">
-              <span class="control-label">指數</span>
-              <button class="toggle-pill active" data-index="SP500"><span class="dot" style="background:var(--chart-color-2)"></span>S&amp;P 500</button>
-              <button class="toggle-pill active" data-index="NASDAQCOM"><span class="dot" style="background:var(--chart-color-3)"></span>NASDAQ</button>
-              <button class="toggle-pill" data-index="DJIA"><span class="dot" style="background:var(--chart-color-4)"></span>DJI</button>
-              <button class="toggle-pill" data-index="RUT"><span class="dot" style="background:var(--chart-color-5)"></span>Russell 2000</button>
-            </div>
-          </div>
-          <div class="chart-wrap"><canvas id="chartC"></canvas></div>
-        </section>
-
-        <!-- Section D: Sub-Indicator History -->
-        <section class="card section-gap reveal" id="sectionD">
-          <div class="card-title">子指標分數歷史走勢</div>
-          <div class="controls-row">
-            <div class="control-group" id="subPills">
-              <span class="control-label">子指標</span>
+            <div class="dim-gauges-container" id="dimGaugesContainer">
               <!-- dynamically filled -->
             </div>
+            <div class="dim-detail-panel" id="dimDetailPanel" style="display:none">
+              <div class="dim-detail-content" id="dimDetailContent"></div>
+            </div>
+          </section>
+
+          <!-- Section C: Macro Score vs Indices -->
+          <section class="card section-gap reveal" id="sectionC">
+            <div class="card-title">大環境分數 vs. 美股指數</div>
+            <div class="controls-row">
+              <div class="control-group">
+                <span class="control-label">時間</span>
+                <button class="btn-range" data-range="1M">1M</button>
+                <button class="btn-range" data-range="3M">3M</button>
+                <button class="btn-range" data-range="6M">6M</button>
+                <button class="btn-range" data-range="1Y" aria-pressed="true">1Y</button>
+                <button class="btn-range" data-range="3Y">3Y</button>
+                <button class="btn-range" data-range="ALL">ALL</button>
+                <button class="btn-range" data-range="CUSTOM">自訂</button>
+              </div>
+              <div class="custom-range" id="customRange">
+                <input type="date" class="date-input" id="dateFrom">
+                <span style="color:var(--color-text-muted);font-size:.78rem">~</span>
+                <input type="date" class="date-input" id="dateTo">
+                <button class="btn-primary" id="applyCustom" style="padding:4px 12px;font-size:.78rem">套用</button>
+              </div>
+            </div>
+            <div class="controls-row">
+              <div class="control-group">
+                <span class="control-label">指數</span>
+                <button class="toggle-pill active" data-index="SP500"><span class="dot"
+                    style="background:var(--chart-color-2)"></span>S&amp;P 500</button>
+                <button class="toggle-pill active" data-index="NASDAQCOM"><span class="dot"
+                    style="background:var(--chart-color-3)"></span>NASDAQ</button>
+                <button class="toggle-pill" data-index="DJIA"><span class="dot"
+                    style="background:var(--chart-color-4)"></span>DJI</button>
+                <button class="toggle-pill" data-index="RUT"><span class="dot"
+                    style="background:var(--chart-color-5)"></span>Russell 2000</button>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartC"></canvas></div>
+          </section>
+
+          <!-- Section D: Sub-Indicator History -->
+          <section class="card section-gap reveal" id="sectionD">
+            <div class="card-title">子指標分數歷史走勢</div>
+            <div class="controls-row">
+              <div class="control-group" id="subPills">
+                <span class="control-label">子指標</span>
+                <!-- dynamically filled -->
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartD"></canvas></div>
+          </section>
+
+          <!-- Section E: Explainability Button (prominent) -->
+          <section class="card section-gap reveal" id="sectionE" style="text-align:center;padding:32px">
+            <div style="font-size:2rem;margin-bottom:8px">📖</div>
+            <h3 style="color:var(--color-text);margin-bottom:8px">景氣與政策綜合指標說明書</h3>
+            <p
+              style="color:var(--color-text-muted);font-size:.88rem;margin-bottom:16px;max-width:500px;margin-left:auto;margin-right:auto">
+              了解系統如何將複雜的經濟環境轉化為一個簡單的分數，以及四大氣象燈號如何指導投資決策。
+            </p>
+            <button class="btn-primary openExplainBtn" id="openExplainBtn3">
+              開啟說明書
+            </button>
+          </section>
+
+        </div><!-- /m1-macro -->
+
+        <!-- ==================== M2-M5: Placeholders ==================== -->
+        <div class="module-panel" id="m2-fundamental" style="display:none">
+          <div class="module-placeholder">
+            <div class="placeholder-icon">📈</div>
+            <h2>基本面分析</h2>
+            <p>此模組正在開發中，將提供財務健康度評分、財報比對等功能。</p>
           </div>
-          <div class="chart-wrap"><canvas id="chartD"></canvas></div>
-        </section>
-
-        <!-- Section E: Explainability Button (prominent) -->
-        <section class="card section-gap reveal" id="sectionE" style="text-align:center;padding:32px">
-          <div style="font-size:2rem;margin-bottom:8px">📖</div>
-          <h3 style="color:var(--color-text);margin-bottom:8px">景氣與政策綜合指標說明書</h3>
-          <p style="color:var(--color-text-muted);font-size:.88rem;margin-bottom:16px;max-width:500px;margin-left:auto;margin-right:auto">
-            了解系統如何將複雜的經濟環境轉化為一個簡單的分數，以及四大氣象燈號如何指導投資決策。
-          </p>
-          <button class="btn-primary openExplainBtn" id="openExplainBtn3">
-            開啟說明書
-          </button>
-        </section>
-
-      </div><!-- /m1-macro -->
-
-      <!-- ==================== M2-M5: Placeholders ==================== -->
-      <div class="module-panel" id="m2-fundamental" style="display:none">
-        <div class="module-placeholder">
-          <div class="placeholder-icon">📈</div>
-          <h2>基本面分析</h2>
-          <p>此模組正在開發中，將提供財務健康度評分、財報比對等功能。</p>
         </div>
-      </div>
-      <div class="module-panel" id="m3-technical" style="display:none">
-        <div class="module-placeholder">
-          <div class="placeholder-icon">📉</div>
-          <h2>技術指標分析</h2>
-          <p>此模組正在開發中，將提供 RSI、MACD、布林通道等技術指標信號。</p>
+        <div class="module-panel" id="m3-technical" style="display:none">
+          <div class="module-placeholder">
+            <div class="placeholder-icon">📉</div>
+            <h2>技術指標分析</h2>
+            <p>此模組正在開發中，將提供 RSI、MACD、布林通道等技術指標信號。</p>
+          </div>
         </div>
-      </div>
-      <div class="module-panel" id="m4-strategy" style="display:none">
-        <div class="module-placeholder">
-          <div class="placeholder-icon">🎯</div>
-          <h2>交易策略制定</h2>
-          <p>此模組正在開發中，將提供買入點建議、止損位與部位大小建議。</p>
+        <div class="module-panel" id="m4-strategy" style="display:none">
+          <div class="module-placeholder">
+            <div class="placeholder-icon">🎯</div>
+            <h2>交易策略制定</h2>
+            <p>此模組正在開發中，將提供買入點建議、止損位與部位大小建議。</p>
+          </div>
         </div>
-      </div>
-      <div class="module-panel" id="m5-ai" style="display:none">
-        <div class="module-placeholder">
-          <div class="placeholder-icon">🤖</div>
-          <h2>AI Agent 決策</h2>
-          <p>此模組正在開發中，將綜合所有模組輸出產生 AI 最終投資建議。</p>
+        <div class="module-panel" id="m5-ai" style="display:none">
+          <div class="module-placeholder">
+            <div class="placeholder-icon">🤖</div>
+            <h2>AI Agent 決策</h2>
+            <p>此模組正在開發中，將綜合所有模組輸出產生 AI 最終投資建議。</p>
+          </div>
         </div>
+
+      </main>
+    </div><!-- /dashboard-grid -->
+  </div><!-- /app-shell -->
+
+  <!-- ============= Explainability Drawer ============= -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="drawer" id="explainDrawer">
+    <button class="drawer-close" id="drawerCloseBtn" aria-label="關閉">✕</button>
+    <h2 class="char-drop" id="drawerTitle">四大面向指標說明書</h2>
+    <p style="color:var(--color-primary);font-size:.82rem;margin-bottom:24px;font-weight:500">Macro Environment
+      Indicator Handbook — 大環境評分系統所監測的全部經濟指標</p>
+
+    <!-- ═══ 面向一 ═══ -->
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">📋 面向一：信用市場與金融中介健康度</h3>
+    </div>
+    <p class="word-scrub">
+      觀察市場流動性壓力、企業融資成本與銀行體系的資產品質。當信用利差飆升或銀行壞帳上升時，代表金融環境惡化，是股市大跌的領先警報。
+    </p>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>指標名稱</th>
+          <th>說明</th>
+          <th>市場關聯性</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">CPN3M</td>
+          <td>3個月商業本票利率</td>
+          <td>企業短期無擔保債務利率</td>
+          <td>反映企業短期融資壓力</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DTB6</td>
+          <td>6個月國庫券利率</td>
+          <td>美國半年期國債收益率</td>
+          <td>無風險利率基準</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DPRIME</td>
+          <td>銀行優惠貸款利率</td>
+          <td>最優客戶貸款利率</td>
+          <td>影響消費與商業貸款成本</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DBAA</td>
+          <td>穆迪 BAA 級企業債</td>
+          <td>投資級較低等級債券回報率</td>
+          <td>信用溢價，利差擴大代表違約擔憂</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DGS10</td>
+          <td>10年期國債收益率</td>
+          <td>美國基準長期國債</td>
+          <td>全球資產定價之母（折現率）</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DRBLACBS</td>
+          <td>銀行資產核銷率</td>
+          <td>貸款無法回收的沖銷比例</td>
+          <td>滯後指標，確認信用壞帳狀況</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
+
+    <!-- ═══ 面向二 ═══ -->
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">⚖️ 面向二：政策預期與體制可信度</h3>
+    </div>
+    <p class="word-scrub">
+      追蹤聯準會 (Fed) 政策路徑、縮表進度與市場對未來的定價。政策方向決定了資金水龍頭的開關力道。
+    </p>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">2-1. 現況與操作工具</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DFF / FEDFUNDS</td>
+          <td>有效聯邦基金利率，Fed 政策落實的實際利率水平</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">WALCL</td>
+          <td>聯準會資產負債表總規模，觀察 QT (縮表) 或 QE (放水) 的直接指標</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">WTREGEN</td>
+          <td>財政部一般帳戶 (TGA)，增加代表抽走流動性，減少代表釋放流動性</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">RRPONTSYD</td>
+          <td>隔夜逆回購，市場過剩資金的緩衝池，反映流動性過剩程度</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">2-2. 利率曲線與預期</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">T10Y2Y</td>
+          <td>10年與2年期國債利差，著名衰退預警指標（倒掛通常預示衰退）</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DGS2 / DGS30</td>
+          <td>短期與超長期利率，觀察收益率曲線的平坦或陡峭化</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">MORTGAGE30US</td>
+          <td>30年期房貸利率，直接影響房地產市場活躍度</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">2-3. SEP (點陣圖) 與市場定價</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">SEP_FFR</td>
+          <td>Fed 官員對未來利率的中位數預期（Current / 1Y / 2Y / Long）</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">POLYMARKET_RATE</td>
+          <td>民間預測市場對利率的即時押注，反映市場共識與 Fed 預期之間的落差</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
+
+    <!-- ═══ 面向三 ═══ -->
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">🏭 面向三：國家經濟情況</h3>
+    </div>
+    <p class="word-scrub">
+      評估通膨、就業、生產力與消費者信心。經濟動能決定了企業獲利前景與景氣循環階段。
+    </p>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">3-1. 通膨指標 (Inflation)</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">CPIAUCSL</td>
+          <td>消費者物價指數 (CPI)，衡量民眾生活成本，Fed 升降息核心參考</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">PCE</td>
+          <td>個人消費支出物價指數，Fed 最看重的通膨錨定指標</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">PPIACO</td>
+          <td>生產者物價指數，通膨的領先指標，反映成本端壓力</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">3-2. 就業與生產力 (Labor &amp; Growth)</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">UNRATE / PAYEMS</td>
+          <td>失業率與非農就業人數，衡量勞動力市場強韌度</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">ICSA</td>
+          <td>初次申領失業救濟金人數，高頻領先指標</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">JTSJOL / JTSQUR</td>
+          <td>職位空缺與離職率，反映勞動力市場供需</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">INDPRO / GDP</td>
+          <td>工業生產與國內生產總值，衡量經濟成長動能</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">3-3. 領先情緒 (Sentiment)</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">UMCSENT</td>
+          <td>密西根大學消費者信心指數，反映民眾對未來的消費意願</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">BABATOTALSAUS</td>
+          <td>商業總銷售額，反映終端需求活躍程度</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
+
+    <!-- ═══ 面向四 ═══ -->
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">🌐 面向四：國際資本傳導與匯率環境</h3>
+    </div>
+    <p class="word-scrub">
+      追蹤美元強弱、跨境資金流向與外資對美債的偏好。全球資金流動直接影響美國資產的價格與流動性。
+    </p>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">4-1. 匯率與帳戶</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">DTWEXBGS</td>
+          <td>美元貿易加權指數，反映美元相對全球主要貨幣的強弱</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">EMVEXRATES</td>
+          <td>匯率波動率，衡量外匯市場的風險與不確定性</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">BOPBCA</td>
+          <td>經常帳餘額，反映美國與國際間的貿易與資本流動健康度</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">4-2. TIC 數據 (國際資本流動)</h3>
+    </div>
+    <table class="row-stagger">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">TIC_GRAND_TOTAL</td>
+          <td>外國人買入美國證券的總淨額</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">TIC_OFFICIAL</td>
+          <td>外國央行對美國長短期國債的增減持，反映去美元化或避險動向</td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);font-weight:600">TIC_JAPAN / CHINA</td>
+          <td>美債前兩大債主持倉變動，對美債長端利率有重大影響</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
+
+    <!-- ═══ 總結 ═══ -->
+    <div class="clip-reveal-wrapper">
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">📝 總結：面向之間的連動邏輯</h3>
+    </div>
+    <p class="word-scrub">
+      <strong>⚠️ 風險提示：</strong>當面向一（信用）惡化與面向二（利率倒掛）同時發生，需警戒金融危機。
+    </p>
+    <p class="word-scrub">
+      <strong>🔥 通膨邏輯：</strong>當面向三（CPI）高企，會迫使面向二（DFF）上升，進而壓縮面向一的流動性。
+    </p>
+    <p class="word-scrub" style="font-weight:500">
+      <strong>🌍 全球視角：</strong>若面向四（TIC）出現大規模拋售，需注意面向一（DGS10）的非預期性飆升。
+    </p>
+  </div>
+
+  <!-- ============= Formula Modal ============= -->
+  <div class="modal-overlay" id="dimFormulaModal" style="display:none" role="dialog" aria-modal="true"
+    aria-labelledby="dimFormulaTitle">
+    <div class="modal-box">
+      <button class="modal-close" id="dimFormulaClose" aria-label="關閉">✕</button>
+      <h2 id="dimFormulaTitle" style="margin-bottom:6px;font-size:1.1rem">§4.3 四大面向權重架構</h2>
+      <p style="color:var(--color-text-muted);font-size:.82rem;margin-bottom:20px">各面向的組成指標與 MACRO_SCORE 佔比說明</p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+          <thead>
+            <tr style="border-bottom:2px solid var(--color-divider)">
+              <th style="text-align:left;padding:10px 8px;color:var(--color-primary);white-space:nowrap">面向</th>
+              <th style="text-align:left;padding:10px 8px;color:var(--color-primary);white-space:nowrap">MACRO_SCORE 佔比
+              </th>
+              <th style="text-align:left;padding:10px 8px;color:var(--color-primary)">組成</th>
+              <th style="text-align:right;padding:10px 8px;color:var(--color-primary);white-space:nowrap">最新分數</th>
+            </tr>
+          </thead>
+          <tbody id="dimFormulaTableBody">
+            <!-- dynamically filled by buildDimSection() -->
+          </tbody>
+        </table>
       </div>
+    </div>
+  </div>
 
-    </main>
-  </div><!-- /dashboard-grid -->
-</div><!-- /app-shell -->
-
-<!-- ============= Explainability Drawer ============= -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-<div class="drawer" id="explainDrawer">
-  <button class="drawer-close" id="drawerCloseBtn" aria-label="關閉">✕</button>
-  <h2 class="char-drop" id="drawerTitle">投資市場的氣象雷達</h2>
-  <p style="color:var(--color-primary);font-size:.82rem;margin-bottom:24px;font-weight:500">景氣與政策綜合指標 (Macro &amp; Policy Score) 說明書</p>
-
-  <p class="word-scrub">
-    在變化莫測的金融市場中，我們如何知道何時該踩油門、何時該踩煞車？為了科學化地評估市場風險，我們獨家開發了「景氣與政策綜合指標（Macro &amp; Policy Score）」。這個系統就像是一台高階的氣象雷達，24 小時不間斷地收集美國核心總體經濟與金融數據，將複雜的經濟環境轉化為一個簡單的「分數」。
-  </p>
-  <p class="word-scrub">
-    這套系統不預測短線的漲跌，而是幫我們判斷目前市場處於「晴天、陰天還是暴風雨」。當雷達顯示風險過高（總體環境惡化）時，系統會自動降低投資部位以保護您的資金；而在環境健康時，則會開啟進攻型策略來獲取最大報酬。
-  </p>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">一、四大核心觀測站</h3></div>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">1. 信用利差 (Credit Spreads) —— 企業的「資金健康檢查」</h3></div>
-  <p class="word-scrub">
-    信用利差是「一般企業借錢的利率」減去「美國政府借錢的利率（無風險利率）」。當景氣好時，銀行和投資人樂意借錢給企業，利差會縮小；當經濟準備陷入危機或衰退時，大家怕企業倒閉，會要求極高的利息才肯借錢，這時利差會迅速飆升。這往往是股市大跌的「領先指標」。
-  </p>
-  <p style="color:var(--color-text-faint);font-size:.82rem;font-family:'JetBrains Mono',monospace;background:var(--color-surface-2);padding:8px 12px;border-radius:6px;margin:8px 0">
-    SPREAD_CP_TB6 = CPN3M - TB6MS<br><span style="color:var(--color-text-muted)">（商業本票利率 − 短期國庫券利率）</span>
-  </p>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">2. 貨幣政策 (Monetary Policy) —— 市場的「資金水龍頭」</h3></div>
-  <p class="word-scrub">
-    主要觀察美國聯準會（Fed）的聯邦基金利率（基準利率）。利率就像是資金的成本。當利率處於高檔或快速上升時（緊縮），市場上的資金水龍頭被關小，企業營運成本增加，對股市通常是逆風；反之，降息循環（寬鬆）則有利於風險資產上漲。
-  </p>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">3. 通貨膨脹 (Inflation) —— 經濟的「體溫計」</h3></div>
-  <p class="word-scrub">
-    觀察消費者物價指數（CPI）的年增率。通膨過高代表經濟「發燒」，央行會被迫強力升息來打壓物價，進而刺破資產泡沫；但通膨若為負數（通縮），則代表經濟失去活力。只有在溫和的通膨區間，才是股市最喜歡的環境。
-  </p>
-  <p style="color:var(--color-text-faint);font-size:.82rem;font-family:'JetBrains Mono',monospace;background:var(--color-surface-2);padding:8px 12px;border-radius:6px;margin:8px 0">
-    INF_YOY = (CPI_t / CPI_{t-12} − 1) × 100<br><span style="color:var(--color-text-muted)">（當月 CPI ÷ 去年同期 CPI − 1）</span>
-  </p>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">4. 匯率與波動 (FX &amp; Volatility) —— 全球資金的「避風港效應」</h3></div>
-  <p class="word-scrub">
-    觀察美元指數的強弱以及外匯市場的波動程度。美元是全球的避險貨幣。當國際金融市場發生恐慌或流動性枯竭時，資金會瘋狂湧入美元避險，導致美元急遽升值。因此，美元的異常強勢與高波動，通常是全球金融壓力的警報器。
-  </p>
-
-  <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">二、化繁為簡：數據如何變成「一個分數」？</h3></div>
-  <p class="word-scrub">
-    不同數據的單位都不同（有的是百分比，有的是指數），我們如何將它們整合在一起？我們採用了與國際貨幣基金組織（IMF）及經濟合作暨發展組織（OECD）類似的科學計量方法，分為三個步驟：
-  </p>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">步驟一：標準化 (Z-Score) —— 與過去 10 年的自己比</h3></div>
-  <p class="word-scrub">
-    我們不只看數據的「絕對數值」，更看重「相對水準」。我們將最新數據與過去 10 年的歷史平均做對比，計算出該指標偏離常態的程度。
-  </p>
-  <p style="color:var(--color-text-faint);font-size:.82rem;font-family:'JetBrains Mono',monospace;background:var(--color-surface-2);padding:8px 12px;border-radius:6px;margin:8px 0">
-    Z = (X − μ) / σ<br><span style="color:var(--color-text-muted)">（當前值 − 10年均值）÷ 10年標準差</span>
-  </p>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">步驟二：指標分級打分 —— 5 檔燈號</h3></div>
-  <table class="row-stagger">
-    <thead><tr><th>分數</th><th>含義</th></tr></thead>
-    <tbody>
-      <tr><td style="color:var(--color-success)">+2</td><td>極度寬鬆 / 環境極佳</td></tr>
-      <tr><td style="color:var(--color-success)">+1</td><td>溫和有利</td></tr>
-      <tr><td style="color:var(--color-warning)">0</td><td>中性 / 正常</td></tr>
-      <tr><td style="color:var(--color-error)">-1</td><td>偏緊張</td></tr>
-      <tr><td style="color:var(--color-error)">-2</td><td>極度緊張 / 危機浮現</td></tr>
-    </tbody>
-  </table>
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="font-size:.92rem;margin-top:16px">步驟三：綜合權重計算 —— 產出最終 Macro Score</h3></div>
-  <table class="row-stagger" id="weightTable">
-    <thead><tr><th>子模組</th><th>權重</th><th>包含指標</th></tr></thead>
-    <tbody>
-      <tr><td>信用利差 (Credit)</td><td style="color:var(--color-primary);font-weight:600">40%</td><td>CP-TB6, Prime-TB6, Baa-GS10</td></tr>
-      <tr><td>貨幣政策 (Policy)</td><td style="color:var(--color-primary);font-weight:600">30%</td><td>聯邦基金利率 (FFR)</td></tr>
-      <tr><td>通膨與匯率 (Price/FX)</td><td style="color:var(--color-primary);font-weight:600">30%</td><td>CPI YoY, 美元指數變動, 匯率波動</td></tr>
-    </tbody>
-  </table>
-  <p style="color:var(--color-text-faint);font-size:.82rem;font-family:'JetBrains Mono',monospace;background:var(--color-surface-2);padding:8px 12px;border-radius:6px;margin:8px 0">
-    S_macro = 0.4 × Credit + 0.3 × Policy + 0.3 × PriceFX
-  </p>
-
-  <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
-
-  <div class="clip-reveal-wrapper"><h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">三、四大氣象燈號</h3></div>
-  <p class="word-scrub">
-    透過上述嚴謹的計算，系統每個月會產出一個分數，並對應到四種市場狀態（Regime）。這將直接決定我們策略的總體資金曝險水位：
-  </p>
-  <table class="row-stagger">
-    <thead><tr><th>分數</th><th>氣象燈號</th><th>市場狀態</th><th>應對策略</th></tr></thead>
-    <tbody>
-      <tr>
-        <td style="color:var(--color-success)">≥ 1.0</td>
-        <td>☀️ 晴朗無雲 (3)</td>
-        <td>資金極度寬鬆，景氣向上</td>
-        <td>全面進攻，部位拉滿</td>
-      </tr>
-      <tr>
-        <td style="color:var(--chart-color-5)">0 ~ 0.99</td>
-        <td>🌤️ 多雲時晴 (2)</td>
-        <td>經濟表現溫和正常</td>
-        <td>穩健佈局，標準部位</td>
-      </tr>
-      <tr>
-        <td style="color:var(--color-warning)">-1.0 ~ -0.01</td>
-        <td>🌧️ 陰雨綿綿 (1)</td>
-        <td>政策偏緊縮，壓力漸增</td>
-        <td>防禦準備，降低曝險</td>
-      </tr>
-      <tr>
-        <td style="color:var(--color-error)">&lt; -1.0</td>
-        <td>⛈️ 狂風暴雨 (0)</td>
-        <td>信用利差飆升，流動性枯竭</td>
-        <td>強力避險，轉向現金</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <hr style="border:none;border-top:1px solid var(--color-divider);margin:24px 0">
-  <p class="word-scrub" style="font-weight:500">
-    這套「景氣與政策綜合指標」是我們策略的「安全大腦」。它確保了我們在 2008 年金融海嘯或 2022 年強勢升息等極端環境下，能提早一步撤出資金；並在危機解除、曙光乍現時，第一時間帶領資金重返市場。
-  </p>
-</div>
-
-<!-- ============= Scripts ============= -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
-<script src="./assets/js/data.js"></script>
-<script src="./assets/js/gauge.js"></script>
-<script src="./assets/js/charts.js"></script>
-<script src="./assets/js/animations.js"></script>
-<script src="./assets/js/main.js"></script>
+  <!-- ============= Scripts ============= -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script src="./assets/js/data.js"></script>
+  <script src="./assets/js/gauge.js"></script>
+  <script src="./assets/js/charts.js"></script>
+  <script src="./assets/js/animations.js"></script>
+  <script src="./assets/js/main.js"></script>
 </body>
+
 </html>

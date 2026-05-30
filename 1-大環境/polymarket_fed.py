@@ -332,7 +332,8 @@ def print_result(result: dict) -> None:
 def save_result(result: dict, out_path: Path | None = None) -> Path:
     """儲存 JSON 至檔案。"""
     if out_path is None:
-        out_path = Path(__file__).parent / "polymarket_fed.json"
+        out_path = Path(__file__).parent / "data" / "polymarket_fed.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
         encoding="utf-8"

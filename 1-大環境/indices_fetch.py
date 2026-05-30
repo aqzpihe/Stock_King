@@ -34,7 +34,8 @@ import yfinance as yf  # Yahoo Finance for symbols not in FRED
 # -------------------------------------------------------------------
 
 # Excel 輸出路徑（與 fred_data.xlsx 分離）
-INDICES_EXCEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "indices_data.xlsx")
+INDICES_EXCEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "indices_data.xlsx")
+os.makedirs(os.path.dirname(INDICES_EXCEL), exist_ok=True)
 
 # 預設抓取的指數，對應 FRED series_id
 SELECTED_INDICES = [

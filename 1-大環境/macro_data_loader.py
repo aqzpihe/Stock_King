@@ -61,25 +61,41 @@ def fetch_fred_series(api_key, series_id, start_date, end_date=None, delay=0.6):
 def load_all_data(start_date='2010-01-01', cpi_start='2009-01-01',
                   end_date=None, delay=0.6):
     """
-    抓取所有 FRED 序列 -> 計算 CPI YoY -> 對齊至日頻 DataFrame
+    抓取所有 FRED 序列 -> 計算衍生指標 -> 對齊至日頻 DataFrame
+
+    V1 序列（原有）：
+      日頻: CPN3M, DTB6, DPRIME, DBAA, DGS10, DFF, DTWEXBGS, EMVEXRATES, DJIA
+      月頻: CPIAUCSL (多抓 12 個月計算 YoY)
+
+    V2 新增序列：
+      日頻: T10Y2Y (殖利率倒掛), RRPONTSYD (逆回購)
+      週頻: WALCL (Fed 總資產), WTREGEN (TGA 帳戶)
+      月頻: JTSJOL (職位空缺), JTSQUR (辭職率), BABATOT (新企業申請)
+      季頻: DRBLACBS (商業貸款違約率), BOPBCA (經常帳餘額)
+
+    衍生指標：
+      INF_YOY      = (CPIAUCSL / CPIAUCSL.shift(12) - 1) * 100
+      NET_LIQUIDITY = WALCL/1000 - WTREGEN - RRPONTSYD  (單位：十億美元)
     """
     load_env()
     api_key = os.environ.get('FRED_API')
     if not api_key:
         raise ValueError("未在 .env 中找到 FRED_API")
 
-    print("=== FRED API 資料抓取 ===\n")
+    print("=== FRED API 資料抓取 (V2) ===\n")
     all_series = {}
 
-    # 日頻序列
-    daily_ids = ['CPN3M', 'DTB6', 'DPRIME', 'DBAA', 'DGS10',
+    # ── V1：日頻序列 ─────────────────────────────────────────────
+    print("[V1] 日頻序列")
+    daily_v1 = ['CPN3M', 'DTB6', 'DPRIME', 'DBAA', 'DGS10',
                  'DFF', 'DTWEXBGS', 'EMVEXRATES', 'DJIA']
-    for sid in daily_ids:
+    for sid in daily_v1:
         s = fetch_fred_series(api_key, sid, start_date, end_date, delay)
         if not s.empty:
             all_series[sid] = s
 
-    # 月頻 CPI (額外回溯 12 個月算 YoY)
+    # ── V1：月頻 CPI → INF_YOY ───────────────────────────────────
+    print("\n[V1] CPI YoY 計算")
     cpi = fetch_fred_series(api_key, 'CPIAUCSL', cpi_start, end_date, delay)
     if not cpi.empty:
         inf_yoy = (cpi / cpi.shift(12) - 1) * 100
@@ -88,16 +104,59 @@ def load_all_data(start_date='2010-01-01', cpi_start='2009-01-01',
         all_series['INF_YOY'] = inf_yoy
         print(f"  [CALC] INF_YOY: 由 CPIAUCSL 計算完成, {len(inf_yoy)} 筆")
 
+    # ── V2：日頻序列（衰退預警、逆回購）────────────────────────────
+    print("\n[V2] 日頻序列（衰退預警、逆回購）")
+    daily_v2 = ['T10Y2Y', 'RRPONTSYD']
+    for sid in daily_v2:
+        s = fetch_fred_series(api_key, sid, start_date, end_date, delay)
+        if not s.empty:
+            all_series[sid] = s
+
+    # ── V2：週頻序列（Fed 資產負債表、TGA）──────────────────────────
+    print("\n[V2] 週頻序列（淨流動性組件）")
+    liq_start = min(start_date, '2003-01-01')   # WALCL 始於 2002-12
+    weekly_v2 = ['WALCL', 'WTREGEN']
+    for sid in weekly_v2:
+        s = fetch_fred_series(api_key, sid, liq_start, end_date, delay)
+        if not s.empty:
+            all_series[sid] = s
+
+    # ── V2：月頻序列（勞動市場動能、創新創造）────────────────────────
+    print("\n[V2] 月頻序列（就業動能、新企業）")
+    monthly_v2 = ['JTSJOL', 'JTSQUR', 'BABATOT']
+    for sid in monthly_v2:
+        s = fetch_fred_series(api_key, sid, start_date, end_date, delay)
+        if not s.empty:
+            all_series[sid] = s
+
+    # ── V2：季頻序列（信用壓力、國際資本）────────────────────────────
+    print("\n[V2] 季頻序列（違約率、經常帳）")
+    quarterly_v2 = ['DRBLACBS', 'BOPBCA']
+    for sid in quarterly_v2:
+        s = fetch_fred_series(api_key, sid, start_date, end_date, delay)
+        if not s.empty:
+            all_series[sid] = s
+
     if not all_series:
         raise ValueError("無法抓取任何資料")
 
-    # 合併 + 營業日 index + forward-fill
+    # ── 合併 + 營業日 index + forward-fill ──────────────────────────
     df = pd.DataFrame(all_series)
     full_idx = pd.bdate_range(df.index.min(), df.index.max())
     df = df.reindex(full_idx).ffill()
     df = df[df.index >= start_date]
 
+    # ── 衍生：淨流動性（V2）──────────────────────────────────────────
+    # Net Liquidity (B$) = WALCL(M$)/1000 - WTREGEN(B$) - RRPONTSYD(B$)
+    if all(c in df.columns for c in ['WALCL', 'WTREGEN', 'RRPONTSYD']):
+        df['NET_LIQUIDITY'] = df['WALCL'] / 1000 - df['WTREGEN'] - df['RRPONTSYD']
+        latest_liq = df['NET_LIQUIDITY'].dropna()
+        if not latest_liq.empty:
+            print(f"\n  [CALC] NET_LIQUIDITY: 計算完成"
+                  f"  (最新: {latest_liq.iloc[-1]:.1f} B$)")
+
     print(f"\n=== 最終 DataFrame: {df.shape[0]} 天 x {df.shape[1]} 欄位 ===")
     print(f"日期: {df.index.min().date()} ~ {df.index.max().date()}")
     print(f"欄位: {list(df.columns)}")
     return df
+

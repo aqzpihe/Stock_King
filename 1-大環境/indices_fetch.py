@@ -125,8 +125,20 @@ def fetch_yahoo_series(ticker, start_date, end_date=None, max_retries=3):
 # 主流程
 # -------------------------------------------------------------------
 
+def _read_existing_series(sid: str) -> pd.Series | None:
+    """讀取現有 Excel 某工作表（= 某指數），回傳以 date 為 index 的 Series；不存在則回傳 None。"""
+    if not os.path.exists(INDICES_EXCEL):
+        return None
+    try:
+        df = pd.read_excel(INDICES_EXCEL, sheet_name=sid, parse_dates=["date"])
+        s = df.set_index("date")[sid].sort_index().dropna()
+        return s
+    except Exception:
+        return None
+
+
 def fetch_and_save():
-    """抓取所有選取的指數並寫入 `indices_data.xlsx`"""
+    """抓取所有選取的指數並寫入 `indices_data.xlsx`（增量模式：只抓新資料）"""
     load_env()
     api_key = os.environ.get("FRED_API")
     if not api_key:
@@ -137,25 +149,45 @@ def fetch_and_save():
     print(f"  時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*60}\n")
 
-    selected = [(name, sid) for name, sid in SELECTED_INDICES]
+    writer_mode = "a" if os.path.exists(INDICES_EXCEL) else "w"
+    writer_kwargs = {"engine": "openpyxl", "mode": writer_mode}
+    if writer_mode == "a":
+        writer_kwargs["if_sheet_exists"] = "replace"
 
-    with pd.ExcelWriter(INDICES_EXCEL, engine="openpyxl") as writer:
-        for name, sid in selected:
+    with pd.ExcelWriter(INDICES_EXCEL, **writer_kwargs) as writer:
+        for name, sid in SELECTED_INDICES:
             print(f"[指數] {name} ({sid})")
-            if sid == "RUT":
-                series = fetch_yahoo_series("^RUT", START_DATE)
+
+            existing = _read_existing_series(sid)
+            if existing is not None and not existing.empty:
+                last_date = existing.index.max()
+                fetch_from = (last_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+                print(f"  [增量] 現有資料至 {last_date.date()}，從 {fetch_from} 補抓")
             else:
-                series = fetch_series(api_key, sid, START_DATE)
-            if series.empty:
+                fetch_from = START_DATE
+                print(f"  [全量] 從 {fetch_from} 開始抓取")
+
+            if sid == "RUT":
+                new_series = fetch_yahoo_series("^RUT", fetch_from)
+            else:
+                new_series = fetch_series(api_key, sid, fetch_from)
+
+            if existing is not None and not new_series.empty:
+                series = pd.concat([existing, new_series])
+                series = series[~series.index.duplicated(keep="last")].sort_index()
+            elif existing is not None:
+                series = existing
+            elif not new_series.empty:
+                series = new_series
+            else:
                 print(f"  !! {name} 無資料，跳過\n")
                 continue
+
             df = series.reset_index()
             df.columns = ["date", sid]
             df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-            # 每個指數一個工作表，工作表名稱使用簡潔的英文名稱
-            sheet_name = sid
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-            print(f"  -> 寫入 '{sheet_name}'：{df.shape[0]} 筆 x {df.shape[1]} 欄\n")
+            df.to_excel(writer, sheet_name=sid, index=False)
+            print(f"  -> 寫入 '{sid}'：{df.shape[0]} 筆（新增 {len(new_series)} 筆）\n")
 
     print(f"{'='*60}")
     print("  完成！指數資料已寫入:")

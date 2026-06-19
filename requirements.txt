@@ -4,3 +4,6 @@ numpy
 requests
 openpyxl
 fredapi
+yfinance
+kaggle
+python-dotenv

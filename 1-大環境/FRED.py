@@ -260,8 +260,20 @@ def fetch_series(api_key, series_id, start_date, end_date=None):
 # 主邏輯
 # ──────────────────────────────────────────────
 
+def _read_existing_sheet(sheet_name: str) -> pd.DataFrame | None:
+    """讀取現有 Excel 某工作表，回傳以 date 為 index 的 DataFrame；不存在則回傳 None。"""
+    if not os.path.exists(EXCEL_PATH):
+        return None
+    try:
+        df = pd.read_excel(EXCEL_PATH, sheet_name=sheet_name, parse_dates=["date"])
+        df = df.set_index("date").sort_index()
+        return df
+    except Exception:
+        return None
+
+
 def fetch_and_save():
-    """抓取所有 series 並依分類存至 Excel 多工作表"""
+    """抓取所有 series 並依分類存至 Excel 多工作表（增量模式：只抓新資料）"""
     load_env()
     api_key = os.environ.get("FRED_API")
     if not api_key:
@@ -272,27 +284,49 @@ def fetch_and_save():
     print(f"  時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*60}\n")
 
-    fail_log = []   # 記錄所有失敗的 series，最後統一列出
+    fail_log = []
 
-    with pd.ExcelWriter(EXCEL_PATH, engine="openpyxl") as writer:
+    writer_mode = "a" if os.path.exists(EXCEL_PATH) else "w"
+    writer_kwargs = {"engine": "openpyxl", "mode": writer_mode}
+    if writer_mode == "a":
+        writer_kwargs["if_sheet_exists"] = "replace"
+
+    with pd.ExcelWriter(EXCEL_PATH, **writer_kwargs) as writer:
         for sheet_name, series_ids, start_date, *_ in SHEET_CATEGORIES:
             print(f"[工作表] {sheet_name}  ({', '.join(series_ids)})")
 
-            frames = {}
+            # 讀現有資料，決定從哪天開始抓
+            existing_df = _read_existing_sheet(sheet_name)
+            if existing_df is not None and not existing_df.empty:
+                last_date = existing_df.index.max()
+                fetch_from = (last_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+                print(f"  [增量] 現有資料至 {last_date.date()}，從 {fetch_from} 補抓")
+            else:
+                fetch_from = start_date
+                print(f"  [全量] 從 {fetch_from} 開始抓取")
+
+            new_frames = {}
             for sid in series_ids:
-                s = fetch_series(api_key, sid, start_date)
+                s = fetch_series(api_key, sid, fetch_from)
                 if not s.empty:
-                    frames[sid] = s
+                    new_frames[sid] = s
                 else:
                     fail_log.append((sheet_name, sid))
 
-            if not frames:
+            # 合併現有 + 新資料
+            if existing_df is not None and new_frames:
+                new_df = pd.DataFrame(new_frames)
+                merged = pd.concat([existing_df, new_df])
+                merged = merged[~merged.index.duplicated(keep="last")].sort_index()
+            elif existing_df is not None:
+                merged = existing_df  # 今天無新資料，保留舊的
+            elif new_frames:
+                merged = pd.DataFrame(new_frames).sort_index()
+            else:
                 print(f"  !! 此分類無任何資料，跳過\n")
                 continue
 
-            # 合併 → forward-fill → reset index
-            df = pd.DataFrame(frames)
-            df = df.sort_index().ffill()
+            df = merged.ffill()
             df.index.name = "date"
             df = df.reset_index()
             df["date"] = df["date"].dt.strftime("%Y-%m-%d")

@@ -123,6 +123,7 @@
     updateThemeIcon(next);
     // Rebuild charts with new theme colors
     if (STATE.data) Charts.rebuildAll(STATE.data, STATE);
+    if (typeof FundamentalsModule !== 'undefined') FundamentalsModule.rebuildChart();
   });
 
   function updateThemeIcon(theme) {
@@ -134,6 +135,8 @@
   const tabBtns = document.querySelectorAll('.tab-btn');
   const modulePanels = document.querySelectorAll('.module-panel');
 
+  let _m2Inited = false;
+
   function switchModule(moduleId) {
     tabBtns.forEach(btn => {
       btn.setAttribute('aria-selected', btn.dataset.module === moduleId ? 'true' : 'false');
@@ -143,6 +146,16 @@
     });
     STATE.currentModule = moduleId;
     window.location.hash = moduleId;
+
+    // 切換 sidebar 顯示：M2 不需要日期選擇器
+    const grid = document.querySelector('.dashboard-grid');
+    if (grid) grid.classList.toggle('sidebar-off', moduleId === 'm2-fundamental');
+
+    // Lazy-init M2 on first activation
+    if (moduleId === 'm2-fundamental' && !_m2Inited) {
+      _m2Inited = true;
+      if (typeof FundamentalsModule !== 'undefined') FundamentalsModule.init();
+    }
   }
 
   tabBtns.forEach(btn => {
@@ -173,7 +186,6 @@
     STATE.data = await DataService.fetchData();
     const dimRows = await DataService.fetchDimScores();
     dimScores = DataService.getLatestDimScores(dimRows);
-    STATE.rawData = await DataService.fetchRawData();
 
     // 將實際資料日期注入 DrumPicker（day 模式只跳到有資料的交易日）
     if (typeof DrumPicker !== 'undefined' && STATE.data?.scores?.MACRO_SCORE?.length) {
@@ -292,7 +304,7 @@
     });
 
     // Confirm Button
-    dataDateConfirm.addEventListener('click', () => {
+    dataDateConfirm.addEventListener('click', async () => {
       const y = dataYear.value;
       const m = dataMonth.value;
       const d = dataDay.value;
@@ -324,9 +336,7 @@
           `${macroVal >= 0 ? '+' : ''}${macroVal.toFixed(3)} (${STATE.selectedDataDate})`;
       }
 
-      if (window.refreshActiveDimDetail) {
-        window.refreshActiveDimDetail();
-      }
+      if (window.refreshActiveDimDetail) await window.refreshActiveDimDetail();
     });
   }
 
@@ -511,7 +521,7 @@
     const detailPanel = document.getElementById('dimDetailPanel');
     const detailContent = document.getElementById('dimDetailContent');
 
-    window.refreshActiveDimDetail = () => {
+    window.refreshActiveDimDetail = async () => {
       if (activeDimIdx === null) return;
       const dim = DIMS[activeDimIdx];
       const s = STATE.currentDimScores?.[dim.key] ?? null;
@@ -522,7 +532,7 @@
       let indicatorsHtml = '';
       const indDefs = RAW_INDICATORS[dim.key] || [];
       const selectedDate = STATE.selectedDataDate;
-      const dateData = (STATE.rawData && STATE.rawData[selectedDate]) ? STATE.rawData[selectedDate] : {};
+      const dateData = await DataService.fetchRawDataForDate(selectedDate);
 
       if (indDefs.length > 0) {
         indicatorsHtml = indDefs.map((ind, idx) => {
@@ -564,7 +574,7 @@
         </div>`;
     };
 
-    container.addEventListener('click', e => {
+    container.addEventListener('click', async e => {
       const btn = e.target.closest('.dim-label-btn');
       if (!btn) return;
 
@@ -582,7 +592,7 @@
         allBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        window.refreshActiveDimDetail();
+        await window.refreshActiveDimDetail();
 
         // 重新觸發 CSS 動畫
         detailPanel.style.display = 'none';

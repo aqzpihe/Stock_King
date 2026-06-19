@@ -1,0 +1,43 @@
+name: 大環境每日更新
+
+on:
+  schedule:
+    - cron: '0 1 * * 1-5'   # 台灣時間 週一~週五 早上 9:00（UTC+8）
+  workflow_dispatch:          # 允許手動觸發
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout 程式碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: 安裝依賴
+        run: pip install -r requirements.txt
+
+      # ── 偵測 + 完整管線（run_update.py 內部處理） ────────────────
+      - name: 偵測並更新（自動增量）
+        env:
+          FRED_API: ${{ secrets.FRED_API }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python 1-大環境/run_update.py
+
+      # ── Commit 本地 Excel 快取（供下次增量使用）─────────────────────
+      - name: Commit Excel 快取
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add 1-大環境/data/fred_data.xlsx \
+                  1-大環境/data/indices_data.xlsx
+          git diff --staged --quiet || git commit -m "chore: 自動更新快取 [$(date -u '+%Y-%m-%d')]"
+          git push

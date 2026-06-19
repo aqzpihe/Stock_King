@@ -25,3 +25,23 @@ token.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# 1-大環境 衍生資料（CI 每次重新生成，不進 repo）
+1-大環境/data/data.csv
+1-大環境/data/data.xlsx
+1-大環境/data/scores.csv
+1-大環境/data/scores_visualization.png
+1-大環境/data/sep_data.csv
+1-大環境/data/sep_data.xlsx
+1-大環境/data/analysis.txt
+1-大環境/data/tic_holdings.csv
+1-大環境/data/tic_data/
+1-大環境/data/polymarket_fed.json
+
+# assets/data（前端已改讀 Supabase）
+assets/data/
+
+# 2-基本面 原始資料（已上傳 Supabase，不進 repo）
+2-基本面/*.json
+2-基本面/*.xlsx
+2-基本面/2016-2026公司資料/

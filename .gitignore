@@ -45,3 +45,11 @@ assets/data/
 2-基本面/*.json
 2-基本面/*.xlsx
 2-基本面/2016-2026公司資料/
+2-基本面/auto/*.xlsx
+
+# 3-技術指標 模型比較輸出（衍生資料，不進 repo）
+3-技術指標/survey/facet_survey.csv
+
+# API 金鑰設定檔（本機測試用，內含明碼 key，不進 repo）
+config.py
+**/config.py

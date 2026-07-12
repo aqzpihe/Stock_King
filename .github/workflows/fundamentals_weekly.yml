@@ -1,0 +1,26 @@
+name: 2-基本面每週季報更新
+
+on:
+  schedule:
+    - cron: '0 1 * * 1'   # 每週一 09:00 TWN（UTC+8）
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - run: pip install -r requirements.txt
+
+      - name: 偵測新 10-Q 申報並增量更新
+        env:
+          FMP_API: ${{ secrets.FMP_API }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python 2-基本面/fmp_updater.py

@@ -114,8 +114,8 @@
 
 /* ===================== Pulse Glow ===================== */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,.3); }
-  50%      { box-shadow: 0 0 16px 4px rgba(192,57,43,.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,79,79,.3); }
+  50%      { box-shadow: 0 0 16px 4px rgba(201,79,79,.15); }
 }
 .pulse-glow { animation: pulseGlow 2s ease infinite; }
 

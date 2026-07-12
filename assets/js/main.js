@@ -115,6 +115,13 @@
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
 
+  // LOGO 首載書寫動畫：只播一次
+  if (!localStorage.getItem('logoWritten')) {
+    document.querySelector('.header-logo img')?.classList.add('logo-writing');
+    document.querySelector('.header-logo span')?.classList.add('logo-fadeup');
+    localStorage.setItem('logoWritten', '1');
+  }
+
   themeBtn.addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
@@ -124,11 +131,48 @@
     // Rebuild charts with new theme colors
     if (STATE.data) Charts.rebuildAll(STATE.data, STATE);
     if (typeof FundamentalsModule !== 'undefined') FundamentalsModule.rebuildChart();
+    if (typeof TechnicalModule !== 'undefined') TechnicalModule.rebuildTheme();
   });
 
   function updateThemeIcon(theme) {
-    themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    // 幾何日/月 SVG（1.5px stroke、currentColor）
+    themeBtn.innerHTML = theme === 'dark'
+      ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.5"/><line x1="8" y1="0.5" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15.5"/><line x1="0.5" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15.5" y2="8"/><line x1="2.7" y1="2.7" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="13.3" y2="13.3"/><line x1="2.7" y1="13.3" x2="4.1" y2="11.9"/><line x1="11.9" y1="4.1" x2="13.3" y2="2.7"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 9.5A6 6 0 1 1 6.5 2.5a5 5 0 0 0 7 7z"/></svg>';
     themeBtn.title = theme === 'dark' ? '切換至亮色模式' : '切換至暗色模式';
+  }
+
+  // ===== 漲跌配色切換（台式 紅漲綠跌 / 美式 綠漲紅跌） =====
+  const updownBtn = document.getElementById('updownToggle');
+  function applyUpDown(mode) {
+    const root = document.documentElement;
+    // 先還原成主題預設值再決定是否交換
+    root.style.removeProperty('--color-up');
+    root.style.removeProperty('--color-down');
+    if (mode === 'us') {
+      const base = getComputedStyle(root);
+      const up = base.getPropertyValue('--color-up').trim();
+      const down = base.getPropertyValue('--color-down').trim();
+      root.style.setProperty('--color-up', down);
+      root.style.setProperty('--color-down', up);
+    }
+    if (updownBtn) {
+      updownBtn.textContent = mode === 'us' ? '綠漲' : '紅漲';
+      updownBtn.title = mode === 'us' ? '美式 綠漲紅跌（點擊切回台式）' : '台式 紅漲綠跌（點擊切換美式）';
+    }
+    document.dispatchEvent(new CustomEvent('updownchange', { detail: { mode } }));
+  }
+  const savedUpDown = localStorage.getItem('updownMode') || 'tw';
+  applyUpDown(savedUpDown);
+  if (updownBtn) {
+    updownBtn.addEventListener('click', () => {
+      const next = (localStorage.getItem('updownMode') || 'tw') === 'tw' ? 'us' : 'tw';
+      localStorage.setItem('updownMode', next);
+      applyUpDown(next);
+      if (STATE.data) Charts.rebuildAll(STATE.data, STATE);
+      if (typeof FundamentalsModule !== 'undefined') FundamentalsModule.rebuildChart();
+      if (typeof TechnicalModule !== 'undefined') TechnicalModule.rebuildTheme();
+    });
   }
 
   // ===== Tab Routing =====
@@ -150,6 +194,12 @@
     // 切換 sidebar 顯示：M2 不需要日期選擇器
     const grid = document.querySelector('.dashboard-grid');
     if (grid) grid.classList.toggle('sidebar-off', moduleId === 'm2-fundamental');
+
+    // M3 側欄改顯示指標詳細說明，取代 M1 的日期選擇器
+    const m1Sections = document.getElementById('m1SidebarSections');
+    const m3Section = document.getElementById('m3SidebarSection');
+    if (m1Sections) m1Sections.style.display = moduleId === 'm3-technical' ? 'none' : '';
+    if (m3Section) m3Section.style.display = moduleId === 'm3-technical' ? '' : 'none';
 
     // Lazy-init M2 on first activation
     if (moduleId === 'm2-fundamental' && !_m2Inited) {
@@ -181,6 +231,15 @@
     if (sidebar.classList.contains('open')) sidebar.classList.remove('open');
   });
 
+  // ===== Sidebar Manual Collapse (desktop) =====
+  const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+  sidebarCollapseBtn?.addEventListener('click', () => {
+    const grid = document.querySelector('.dashboard-grid');
+    const collapsed = grid.classList.toggle('sidebar-collapsed');
+    sidebarCollapseBtn.textContent = collapsed ? '›' : '‹';
+    sidebarCollapseBtn.title = collapsed ? '展開側欄' : '收合側欄';
+  });
+
   let dimScores = {};   // 預設空物件，確保後續 buildDimSection 不 crash
   try {
     STATE.data = await DataService.fetchData();
@@ -201,7 +260,7 @@
   } catch (err) {
     document.getElementById('mainContent').innerHTML = `
       <div class="module-placeholder">
-        <div class="placeholder-icon">⚠️</div>
+        <div class="placeholder-icon placeholder-geo"></div>
         <h2>資料載入失敗</h2>
         <p>找不到 dashboard_data.json<br><code style="color:var(--color-primary)">python export_dashboard_data.py</code></p>
         <p style="font-size:.78rem;color:var(--color-text-faint)">${err.message}</p>
@@ -562,9 +621,9 @@
           </div>
         </div>
         <div style="padding:14px 16px;background:var(--color-surface-2);
-                    border-radius:10px;border:1px dashed var(--color-border);
+                    border-radius:0;border:1px dashed var(--color-border);
                     color:var(--color-text-muted);font-size:.83rem;line-height:1.7">
-          <div style="margin-bottom: 8px; font-weight: 600; color: var(--color-primary);">📊 底層原始數據 (${selectedDate})</div>
+          <div style="margin-bottom: 8px; font-weight: 600; color: var(--color-primary);">底層原始數據 (${selectedDate})</div>
           <div style="margin-bottom: 12px;">
             ${indicatorsHtml}
           </div>

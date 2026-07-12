@@ -6,10 +6,10 @@ const GaugeChart = (() => {
   const ARC_LENGTH = 251.3; // Approximate semicircle path length for r=80
 
   const REGIME_CONFIG = {
-    3: { label: '寬鬆 — 有利風險資產',   icon: '🟢', cls: 'bullish',  desc: '當前環境對風險資產有利，信用利差低、政策寬鬆、通膨穩定。' },
-    2: { label: '中性偏多',              icon: '🔵', cls: 'bullish',  desc: '環境溫和正向，基本面未見明顯壓力，可維持適度風險部位。' },
-    1: { label: '中性偏保守',            icon: '⚠️', cls: 'cautious', desc: '出現部分壓力信號，建議降低風險敞口，留意政策轉向。' },
-    0: { label: '緊縮 — 風險極高',       icon: '🔴', cls: 'bearish',  desc: '多重指標示警，信用環境緊縮，建議防禦性配置。' },
+    3: { label: '寬鬆 — 有利風險資產',   color: 'var(--color-down)', cls: 'bullish',  desc: '當前環境對風險資產有利，信用利差低、政策寬鬆、通膨穩定。' },
+    2: { label: '中性偏多',              color: 'var(--color-accent)', cls: 'bullish',  desc: '環境溫和正向，基本面未見明顯壓力，可維持適度風險部位。' },
+    1: { label: '中性偏保守',            color: 'var(--color-gold)', cls: 'cautious', desc: '出現部分壓力信號，建議降低風險敞口，留意政策轉向。' },
+    0: { label: '緊縮 — 風險極高',       color: 'var(--color-up)', cls: 'bearish',  desc: '多重指標示警，信用環境緊縮，建議防禦性配置。' },
   };
 
   const SCORE_LABELS = [
@@ -67,7 +67,9 @@ const GaugeChart = (() => {
     // Regime badge
     const badgeEl = document.getElementById('regimeBadge');
     badgeEl.className = `regime-badge ${config.cls}`;
-    document.getElementById('regimeIcon').textContent = config.icon;
+    const _ri = document.getElementById('regimeIcon');
+    _ri.textContent = '';
+    _ri.style.cssText = 'display:inline-block;width:8px;height:8px;background:' + config.color + ';';
     document.getElementById('regimeText').textContent = config.label;
 
     // Regime description
@@ -131,7 +133,9 @@ const GaugeChart = (() => {
 
     const badgeEl = document.getElementById('regimeBadge');
     badgeEl.className = `regime-badge ${config.cls}`;
-    document.getElementById('regimeIcon').textContent = config.icon;
+    const _ri = document.getElementById('regimeIcon');
+    _ri.textContent = '';
+    _ri.style.cssText = 'display:inline-block;width:8px;height:8px;background:' + config.color + ';';
     document.getElementById('regimeText').textContent = config.label;
     document.getElementById('regimeDescription').textContent = config.desc;
 

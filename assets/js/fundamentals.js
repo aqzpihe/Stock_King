@@ -14,7 +14,7 @@ const FundamentalsModule = (() => {
   // ── Tab definitions ─────────────────────────────────────────
   const TABS = {
     eps: {
-      label: 'EPS / 盈利', icon: '📊', chartTitle: 'EPS 季度走勢', chartType: 'combo',
+      label: 'EPS / 盈利', chartTitle: 'EPS 季度走勢', chartType: 'combo',
       barCols:  [{ key: 'eps',     label: 'EPS' }],
       lineCols: [{ key: 'eps_ttm', label: 'EPS TTM' }],
       tableCols: [
@@ -26,7 +26,7 @@ const FundamentalsModule = (() => {
       ],
     },
     income: {
-      label: '損益表', icon: '📋', chartTitle: '營收 & 利潤率走勢', chartType: 'combo',
+      label: '損益表', chartTitle: '營收 & 利潤率走勢', chartType: 'combo',
       barCols:  [{ key: 'revenue', label: '營收' }],
       lineCols: [
         { key: 'gross_margin',      label: '毛利率%', pct: true },
@@ -42,7 +42,7 @@ const FundamentalsModule = (() => {
       ],
     },
     balance: {
-      label: '資產負債', icon: '⚖️', chartTitle: '資產結構（堆疊）', chartType: 'stacked',
+      label: '資產負債', chartTitle: '資產結構（堆疊）', chartType: 'stacked',
       stackCols: [
         { key: 'current_assets',       label: '流動資產' },
         { key: 'fixed_assets',         label: '固定資產' },
@@ -58,7 +58,7 @@ const FundamentalsModule = (() => {
       ],
     },
     cashflow: {
-      label: '現金流量', icon: '💰', chartTitle: '現金流量走勢', chartType: 'grouped',
+      label: '現金流量', chartTitle: '現金流量走勢', chartType: 'grouped',
       barCols: [
         { key: 'operating_cash_flow', label: '營業CF' },
         { key: 'investing_cash_flow', label: '投資CF' },
@@ -75,7 +75,7 @@ const FundamentalsModule = (() => {
     },
   };
 
-  const C = ['#c0392b', '#3498db', '#9b59b6', '#e67e22', '#1abc9c', '#f39c12'];
+  const C = ['#8B2E2E', '#7A93B8', '#C9A227', '#C94F4F', '#9A9DA6', '#A03636'];
 
   // ── Per-tab glossary definitions ─────────────────────────────
   const GLOSSARY = {
@@ -225,6 +225,8 @@ const FundamentalsModule = (() => {
 
   // X 軸視窗（start = 最舊可見季度 index，count = 可見數量）
   let _view = { start: 0, count: 0 };
+  let _zoomIdx = 0;     // 刻度器目前刻度（持久狀態；勿從 ratio 反推，短資料會因取整卡死）
+  let _markedPeriod = null;  // 表格點擊標記的期間（以 period 字串記，view 平移不失效）
   const ZOOM_MIN = 4;   // 最少 4 季（1 年）
 
   // ── Supabase REST helper ─────────────────────────────────────
@@ -265,12 +267,49 @@ const FundamentalsModule = (() => {
     _view.start = Math.max(0, Math.min(max - _view.count, _view.start));
   }
 
+  // ── 多邊形刻度器（規格：DESIGN-HANDOFF §6，勿自行變更規則） ──
+  // 刻度陣列：1.0→4.2 步進 0.1 ＋ 5.3/7/10.5，共 36 值（35 刻）
+  const ZOOM_STEPS = (() => {
+    const a = [];
+    for (let v = 10; v <= 42; v++) a.push(v / 10);
+    a.push(5.3, 7, 10.5);
+    return a;
+  })();
+
+  // 邊數：起點 3 邊；沿刻度累積變動量，滿 0.2 就 +1 邊並歸零
+  function _sidesAt(i) {
+    let sides = 3, acc = 0;
+    for (let k = 1; k <= i; k++) {
+      acc += ZOOM_STEPS[k] - ZOOM_STEPS[k - 1];
+      if (acc >= 0.2 - 1e-9) { sides++; acc = 0; }
+    }
+    return sides;
+  }
+
+  // 正 n 邊形頂點，從正上方（-90°）起算
+  function _polyPoints(n, cx = 48, cy = 48, r = 34) {
+    const pts = [];
+    for (let k = 0; k < n; k++) {
+      const a = -Math.PI / 2 + k * 2 * Math.PI / n;
+      pts.push((cx + r * Math.cos(a)).toFixed(2) + ',' + (cy + r * Math.sin(a)).toFixed(2));
+    }
+    return pts.join(' ');
+  }
+
   function _updateZoomInfo() {
-    const el = document.getElementById('fundZoomInfo');
-    if (!el) return;
-    if (!_data.length) { el.textContent = ''; return; }
-    const ratio = _data.length / _view.count;
-    el.textContent = '×' + (ratio % 1 < 0.05 ? Math.round(ratio) : ratio.toFixed(1));
+    if (!_data.length) return;
+    const i = _zoomIdx;
+    const ring = document.getElementById('fundZoomRing');
+    const poly = document.getElementById('fundZoomPoly');
+    const readout = document.getElementById('fundZoomReadout');
+    const sub = document.getElementById('fundZoomReadoutSub');
+    if (!ring) return;
+    // 外環＝全行程進度：第 i 刻走 i/35 圈，與倍率大小無關
+    ring.setAttribute('stroke-dasharray', `${(i / 35 * 100).toFixed(2)} 100`);
+    const sides = _sidesAt(i);
+    poly.setAttribute('points', _polyPoints(sides));
+    readout.textContent = '×' + ZOOM_STEPS[i].toFixed(1);
+    sub.textContent = `${sides} 邊・刻度 ${i}/35`;
   }
 
   function _updateScrollBar() {
@@ -305,29 +344,12 @@ const FundamentalsModule = (() => {
       const col = cols[i]; if (!col) return;
       ds.data = visible.map(r => r[col.key] ?? null);
       if (cfg.chartType === 'grouped') {
-        ds.backgroundColor = visible.map(r => (r[col.key] ?? 0) >= 0 ? C[i] + 'cc' : '#c0392bcc');
-        ds.borderColor     = visible.map(r => (r[col.key] ?? 0) >= 0 ? C[i]        : '#c0392b');
+        ds.backgroundColor = visible.map(r => (r[col.key] ?? 0) >= 0 ? C[i] + 'cc' : '#8B2E2Ecc');
+        ds.borderColor     = visible.map(r => (r[col.key] ?? 0) >= 0 ? C[i]        : '#8B2E2E');
       }
     });
     _chart.update('none');
     _updatePanCursor();
-  }
-
-  // ── Zoom with right-edge anchor ──────────────────────────────
-  // outward=true → 放大檢視（顯示更多季度，count 增加），向舊資料延伸
-  // outward=false → 縮小檢視（顯示更少季度，count 減少），右側（最新）保持可見
-  function _doZoom(outward) {
-    if (!_data.length) return;
-    const step     = Math.max(2, Math.floor(_view.count * 0.15));
-    const oldCount = _view.count;
-    _view.count    = Math.max(ZOOM_MIN, Math.min(_data.length, _view.count + (outward ? step : -step)));
-    const diff     = _view.count - oldCount;
-    // 錨定右側（最新資料）：count 增加 → start 向左移，count 減少 → start 向右移
-    _view.start    = Math.max(0, _view.start - diff);
-    _clampView();
-    _updateZoomInfo();
-    _updateScrollBar();
-    _applyView();
   }
 
   // ── Glossary toggle ──────────────────────────────────────────
@@ -367,6 +389,33 @@ const FundamentalsModule = (() => {
   }
 
   // ── Chart builder ─────────────────────────────────────────────
+  // 標記期間的直式高亮帶（綠：palette 中唯一未當系列色的顏色，亮/暗各一；
+  // 不讀 --color-down 變數，避免美式漲跌切換後變紅與柱色相撞）
+  const _periodMarkPlugin = {
+    id: 'periodMark',
+    beforeDatasetsDraw(chart) {
+      if (_markedPeriod === null) return;
+      const vis = _getVisible();
+      const i = vis.findIndex(r => r.period === _markedPeriod);
+      if (i < 0) return;
+      const xs = chart.scales.x;
+      const cx = xs.getPixelForValue(i);
+      const half = vis.length > 1
+        ? Math.abs(xs.getPixelForValue(1) - xs.getPixelForValue(0)) / 2
+        : xs.width / 2;
+      const { top, bottom } = chart.chartArea;
+      const light = document.documentElement.getAttribute('data-theme') === 'light';
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.fillStyle = light ? 'rgba(46,125,82,.14)' : 'rgba(62,155,107,.14)';
+      ctx.fillRect(cx - half, top, half * 2, bottom - top);
+      ctx.strokeStyle = light ? '#2E7D52' : '#3E9B6B';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cx - half + .5, top + .5, half * 2 - 1, bottom - top - 1);
+      ctx.restore();
+    },
+  };
+
   function _buildChart() {
     const el = document.getElementById('fundChart');
     if (!el) return;
@@ -379,7 +428,7 @@ const FundamentalsModule = (() => {
     const labels = rows.map(r => _period(r.period));
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
     const gridC  = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.06)';
-    const tickC  = isDark ? '#888884' : '#6b6b6b';
+    const tickC  = isDark ? '#9A9DA6' : '#6B6E78';
 
     const baseScale = { grid: { color: gridC }, ticks: { color: tickC, font: { size: 10 } } };
     const xScale    = { ...baseScale, ticks: { ...baseScale.ticks, maxRotation: 45, autoSkip: true, maxTicksLimit: 14 } };
@@ -426,8 +475,8 @@ const FundamentalsModule = (() => {
         datasets.push({
           type: 'bar', label: col.label,
           data: rows.map(r => r[col.key] ?? null),
-          backgroundColor: rows.map(r => (r[col.key] ?? 0) >= 0 ? C[i] + 'cc' : '#c0392bcc'),
-          borderColor:     rows.map(r => (r[col.key] ?? 0) >= 0 ? C[i]        : '#c0392b'),
+          backgroundColor: rows.map(r => (r[col.key] ?? 0) >= 0 ? C[i] + 'cc' : '#8B2E2Ecc'),
+          borderColor:     rows.map(r => (r[col.key] ?? 0) >= 0 ? C[i]        : '#8B2E2E'),
           borderWidth: 1,
         });
       });
@@ -460,6 +509,7 @@ const FundamentalsModule = (() => {
         },
         scales,
       },
+      plugins: [_periodMarkPlugin],
     });
 
     _updatePanCursor();
@@ -476,7 +526,7 @@ const FundamentalsModule = (() => {
     const cols = TABS[_tab].tableCols;
     const rev  = [...rows].reverse();
     const ths  = cols.map(c => `<th class="fund-th-link" data-col-key="${c.key}" title="點擊查看說明">${c.label}</th>`).join('');
-    const trs  = rev.map(r => {
+    const trs  = rev.map((r, ri) => {
       const tds = cols.map(c => {
         const v   = r[c.key];
         const str = _fmt(v, c);
@@ -484,7 +534,8 @@ const FundamentalsModule = (() => {
         if (c.signed && v !== null && v !== undefined) cls += Number(v) >= 0 ? ' val-pos' : ' val-neg';
         return `<td class="${cls}">${str}</td>`;
       }).join('');
-      return `<tr><td class="period-cell">${_period(r.period)}</td>${tds}</tr>`;
+      const dataIdx = rows.length - 1 - ri;
+      return `<tr data-idx="${dataIdx}" title="點擊跳轉圖表至此期間"><td class="period-cell">${_period(r.period)}</td>${tds}</tr>`;
     }).join('');
     wrap.innerHTML = `
       <table class="fund-table">
@@ -496,6 +547,8 @@ const FundamentalsModule = (() => {
   // ── Render (full rebuild, resets view to show ALL data) ──────
   function _render() {
     _view = { start: 0, count: _data.length };
+    _zoomIdx = 0;
+    _markedPeriod = null;
     _glossaryOpen = false;
     const btn = document.getElementById('fundGuideBtn');
     if (btn) btn.classList.remove('active');
@@ -547,16 +600,21 @@ const FundamentalsModule = (() => {
     if (!hits.length) { dd.style.display = 'none'; return; }
 
     dd.innerHTML = hits.map(c => `
-      <div class="fund-dd-item" data-ticker="${c.ticker}">
+      <div class="fund-dd-item" data-ticker="${c.ticker}" tabindex="0" role="option">
         <span class="fund-dd-ticker">${c.ticker}</span>
         <span class="fund-dd-name">${c.name || ''}</span>
       </div>`).join('');
     dd.style.display = 'block';
 
     dd.querySelectorAll('.fund-dd-item').forEach(el => {
-      el.addEventListener('click', () => {
+      const pick = () => {
         const co = _companies.find(c => c.ticker === el.dataset.ticker);
         if (co) _pick(co);
+      };
+      el.addEventListener('click', pick);
+      // Tab 移動焦點、Enter 選取
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); pick(); }
       });
     });
   }
@@ -617,11 +675,28 @@ const FundamentalsModule = (() => {
     document.getElementById('fundGuideBtn')?.addEventListener('click', _toggleGlossary);
 
     // 點擊表格欄位標題 → 開啟說明書並定位到對應指標
+    // 點擊資料列 → 帶著目前刻度跳轉圖表至該期間並標記該列
     document.getElementById('fundTableWrap')?.addEventListener('click', e => {
       const th = e.target.closest('.fund-th-link');
-      if (!th) return;
-      _glossaryOpen = true;
-      _renderGlossary(th.dataset.colKey);
+      if (th) {
+        _glossaryOpen = true;
+        _renderGlossary(th.dataset.colKey);
+        return;
+      }
+      const tr = e.target.closest('tr[data-idx]');
+      if (!tr || !_data.length) return;
+      const target = parseInt(tr.dataset.idx, 10);
+      _markedPeriod = _data[target]?.period ?? null;
+      // 保持目前縮放（count 不變），將目標期間置中
+      _view.start = Math.max(0, Math.min(
+        _data.length - _view.count,
+        target - Math.floor((_view.count - 1) / 2)
+      ));
+      _updateScrollBar();
+      _applyView();
+      tr.closest('tbody')?.querySelectorAll('.fund-row-marked')
+        .forEach(el => el.classList.remove('fund-row-marked'));
+      tr.classList.add('fund-row-marked');
     });
 
     // ── 橫向捲動條 ───────────────────────────────────────────────
@@ -634,43 +709,44 @@ const FundamentalsModule = (() => {
       });
     }
 
-    // ── 垂直滾輪縮放 ─────────────────────────────────────────────
-    const zoomEl   = document.getElementById('fundZoomWheel');
-    const zoomBody = document.getElementById('fundZoomWheelBody');
+    // ── 多邊形刻度器：滾輪＋±按鈕（右側錨點） ─────────────────────
+    const zoomEl = document.getElementById('fundZoomWheel');
 
-    let _ribOffset = 0;
-
-    function _spinRibs(delta) {
-      _ribOffset += delta;
-      const cycle = 11;
-      zoomBody.style.transform = `translateY(${((_ribOffset % cycle) + cycle) % cycle}px)`;
+    function _setZoomIdx(i) {
+      if (!_data.length) return;
+      // 刻度永遠可走滿 0..35；可見季數另以 ZOOM_MIN 下限保護
+      _zoomIdx = Math.max(0, Math.min(ZOOM_STEPS.length - 1, i));
+      const rightEdge = _view.start + _view.count;
+      _view.count = Math.max(ZOOM_MIN, Math.min(_data.length, Math.round(_data.length / ZOOM_STEPS[_zoomIdx])));
+      _view.start = Math.max(0, rightEdge - _view.count);
+      _clampView();
+      _updateZoomInfo();
+      _updateScrollBar();
+      _applyView();
     }
 
-    // 滑鼠滾輪在滾輪元件上
+    function _stepZoom(dir) {
+      _setZoomIdx(_zoomIdx + dir);
+    }
+
     zoomEl.addEventListener('wheel', e => {
       e.preventDefault();
-      _doZoom(e.deltaY > 0);         // 往下滾 = 放大（顯示更多）
-      _spinRibs(e.deltaY > 0 ? 5 : -5);
+      _stepZoom(e.deltaY < 0 ? 1 : -1);   // 上=放大
     }, { passive: false });
 
-    // 拖曳滾輪元件上下 → 縮放（右側錨點：rightEdge 固定）
-    let _wDrag = { on: false, y0: 0, c0: 0, rightEdge: 0, o0: 0 };
-
-    zoomEl.addEventListener('mousedown', e => {
-      if (!_data.length) return;
-      _wDrag = {
-        on:        true,
-        y0:        e.clientY,
-        c0:        _view.count,
-        rightEdge: _view.start + _view.count,   // 固定右側邊界
-        o0:        _ribOffset,
-      };
-      e.preventDefault();
-    });
+    document.getElementById('fundZoomPlus')?.addEventListener('click', () => _stepZoom(1));
+    document.getElementById('fundZoomMinus')?.addEventListener('click', () => _stepZoom(-1));
 
     // ── 圖表拖曳平移 ─────────────────────────────────────────────
     const chartCanvas = document.getElementById('fundChart');
     const chartWrap   = document.querySelector('.fund-chart-wrap');
+
+    // 圖表上直接滾輪縮放（走同一套刻度，左下角多邊形刻度器自動連動）
+    chartCanvas.addEventListener('wheel', e => {
+      if (!_data.length) return;
+      e.preventDefault();
+      _stepZoom(e.deltaY < 0 ? 1 : -1);   // 上=放大
+    }, { passive: false });
 
     let _pDrag = { on: false, x0: 0, s0: 0 };
 
@@ -683,22 +759,6 @@ const FundamentalsModule = (() => {
 
     // ── 全域 mousemove / mouseup ──────────────────────────────────
     document.addEventListener('mousemove', e => {
-      // 縮放拖曳（右側錨點）
-      if (_wDrag.on && _data.length) {
-        const dy      = e.clientY - _wDrag.y0;
-        // 往下拖 = 放大（count 增加）；往上拖 = 縮小（count 減少）
-        const delta   = Math.round(dy / 3) * 2;
-        const newCnt  = Math.max(ZOOM_MIN, Math.min(_data.length, _wDrag.c0 + delta));
-        _view.count   = newCnt;
-        _view.start   = Math.max(0, _wDrag.rightEdge - newCnt);
-        _clampView();
-        _updateZoomInfo();
-        _updateScrollBar();
-        _applyView();
-        _ribOffset = _wDrag.o0 + dy * 0.4;
-        _spinRibs(0);
-      }
-
       // 平移拖曳（左右拖動圖表）
       if (_pDrag.on && _chart && _data.length) {
         const dx     = e.clientX - _pDrag.x0;
@@ -714,7 +774,6 @@ const FundamentalsModule = (() => {
     });
 
     document.addEventListener('mouseup', () => {
-      _wDrag.on = false;
       _pDrag.on = false;
       chartWrap?.classList.remove('dragging');
     });

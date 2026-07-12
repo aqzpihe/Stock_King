@@ -8,13 +8,13 @@ const Charts = (() => {
 
   // --- Palette ---
   const INDEX_META = {
-    SP500:     { label: 'S&P 500',      color: '#3498db' },
-    NASDAQCOM: { label: 'NASDAQ',        color: '#9b59b6' },
-    DJIA:      { label: 'DJI',           color: '#e67e22' },
-    RUT:       { label: 'Russell 2000',  color: '#1abc9c' },
+    SP500:     { label: 'S&P 500',      color: '#C94F4F' },
+    NASDAQCOM: { label: 'NASDAQ',        color: '#7A93B8' },
+    DJIA:      { label: 'DJI',           color: '#C9A227' },
+    RUT:       { label: 'Russell 2000',  color: '#9A9DA6' },
   };
 
-  const SUB_COLORS = ['#c0392b','#3498db','#9b59b6','#e67e22','#1abc9c','#f39c12','#e74c3c'];
+  const SUB_COLORS = ['#8B2E2E','#7A93B8','#C9A227','#C94F4F','#9A9DA6','#A03636','#5A7499'];
   const SUB_LABELS = {
     SUB_SPREAD_CP_TB6:    'CP-TB6 利差',
     SUB_SPREAD_PRIME_TB6: 'Prime-TB6 利差',
@@ -64,9 +64,9 @@ const Charts = (() => {
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
     return {
       backgroundColor: isDark ? 'rgba(17,17,17,0.95)' : 'rgba(249,248,246,0.95)',
-      titleColor: isDark ? '#f0efec' : '#1a1a1a',
-      bodyColor: isDark ? '#f0efec' : '#1a1a1a',
-      borderColor: isDark ? '#333333' : '#d8d6d2',
+      titleColor: isDark ? '#E8E6E3' : '#26272B',
+      bodyColor: isDark ? '#E8E6E3' : '#26272B',
+      borderColor: isDark ? '#2A2D34' : '#D8D5CF',
       borderWidth: 1,
       padding: 12,
       cornerRadius: 8,
@@ -79,7 +79,7 @@ const Charts = (() => {
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
     return {
       grid: isDark ? 'rgba(42,42,42,0.6)' : 'rgba(208,207,204,0.5)',
-      tick: isDark ? '#888884' : '#6b6b6b',
+      tick: isDark ? '#9A9DA6' : '#6B6E78',
     };
   }
 
@@ -91,7 +91,7 @@ const Charts = (() => {
     const datasets = [{
       label: '大環境分數',
       data: scoreData.map(d => ({ x: d.date, y: d.value })),
-      borderColor: '#c0392b',
+      borderColor: '#8B2E2E',
       backgroundColor: 'rgba(192,57,43,0.06)',
       yAxisID: 'yScore',
       borderWidth: 2.5,
@@ -146,9 +146,9 @@ const Charts = (() => {
           },
           yScore: {
             type: 'linear', position: 'left',
-            title: { display: true, text: '大環境分數', color: '#c0392b', font: { family: 'Inter', size: 11 } },
+            title: { display: true, text: '大環境分數', color: '#C94F4F', font: { family: 'Space Grotesk', size: 11 } },
             grid: { color: sc.grid },
-            ticks: { color: '#c0392b', font: { family: 'Inter', size: 10 } },
+            ticks: { color: '#C94F4F', font: { family: 'IBM Plex Mono', size: 10 } },
           },
           yIndex: {
             type: 'linear', position: 'right',

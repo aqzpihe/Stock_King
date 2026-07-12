@@ -8,7 +8,7 @@
   <meta name="description" content="Stock King 投資分析平台 — 大環境評分、基本面、技術指標、交易策略、AI 決策">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Mr+De+Haviland&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/animations.css">
   <style>
@@ -87,8 +87,8 @@
 
     .dim-label-btn {
       background: var(--color-surface-2);
-      border: 1.5px solid var(--color-border);
-      border-radius: 20px;
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
       padding: 6px 14px;
       cursor: pointer;
       font-size: .78rem;
@@ -155,7 +155,7 @@
     .drum-btn-y {
       width: 34px;
       height: 34px;
-      border-radius: 50%;
+      border-radius: 4px;
       border: none;
       background: transparent;
       cursor: pointer;
@@ -199,7 +199,7 @@
       flex-shrink: 0;
       width: 28px;
       height: 64px;
-      border-radius: 99px;
+      border-radius: 4px;
       border: 1px solid var(--color-border);
       background: var(--color-surface-2);
       color: var(--color-text);
@@ -259,7 +259,7 @@
 
     .drum-line {
       flex-shrink: 0;
-      border-radius: 99px;
+      border-radius: 0;
       background: var(--color-text);
     }
 
@@ -269,7 +269,8 @@
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-family: 'IBM Plex Mono', monospace;
+      font-variant-numeric: tabular-nums;
       letter-spacing: 0.04em;
       gap: 0;
     }
@@ -335,7 +336,7 @@
     .modal-box {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: 16px;
+      border-radius: 0;
       padding: 28px 28px 24px;
       max-width: 740px;
       width: 100%;
@@ -356,7 +357,7 @@
       color: var(--color-text-muted);
       line-height: 1;
       padding: 4px 6px;
-      border-radius: 6px;
+      border-radius: 2px;
       transition: color .15s, background .15s;
     }
 
@@ -432,7 +433,7 @@
       transition: background .1s;
     }
 
-    .fund-dd-item:hover { background: var(--color-surface-2); }
+    .fund-dd-item:hover, .fund-dd-item:focus { background: var(--color-surface-2); outline: none; }
 
     .fund-dd-ticker {
       font-weight: 600;
@@ -466,7 +467,8 @@
     .fund-badge {
       font-size: .7rem;
       padding: 2px 8px;
-      border-radius: 99px;
+      border-radius: 2px;
+      font-family: 'IBM Plex Mono', monospace;
       border: 1px solid var(--color-border);
       color: var(--color-text-muted);
       background: var(--color-surface-2);
@@ -544,94 +546,62 @@
       opacity: .7;
     }
 
+    /* 多邊形刻度器（取代光澤滾筒） */
     .fund-zoom-wheel {
-      width: 76px;
-      height: 118px;
-      border-radius: 50% / 12%;   /* oval / barrel shape */
       position: relative;
-      overflow: hidden;
+      width: 96px;
       cursor: ns-resize;
       user-select: none;
-      /* barrel lighting: dark edges, bright centre */
-      background:
-        radial-gradient(ellipse 60% 100% at 50% 50%,
-          var(--color-surface-2, #2a2a2a) 0%,
-          var(--color-surface, #1e1e1e) 60%,
-          #111 100%);
-      border: 1.5px solid rgba(255,255,255,.12);
-      box-shadow:
-        inset  3px 0 10px rgba(0,0,0,.55),
-        inset -3px 0 10px rgba(0,0,0,.55),
-        0 4px 14px rgba(0,0,0,.4);
-      transition: border-color .2s, box-shadow .2s;
-    }
-
-    .fund-zoom-wheel:hover {
-      border-color: var(--color-primary, #3498db);
-      box-shadow:
-        inset  3px 0 10px rgba(0,0,0,.55),
-        inset -3px 0 10px rgba(0,0,0,.55),
-        0 4px 14px rgba(0,0,0,.4),
-        0 0 0 2px color-mix(in srgb, var(--color-primary, #3498db) 30%, transparent);
-    }
-
-    /* Top / bottom barrel fade */
-    .fund-zoom-wheel::before,
-    .fund-zoom-wheel::after {
-      content: '';
-      position: absolute;
-      left: 0; right: 0;
-      height: 28px;
-      z-index: 2;
-      pointer-events: none;
-    }
-    .fund-zoom-wheel::before {
-      top: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,.7) 0%, transparent 100%);
-    }
-    .fund-zoom-wheel::after {
-      bottom: 0;
-      background: linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%);
-    }
-
-    /* Horizontal ribs (will-change for GPU compositing during drag) */
-    .zoom-wheel-body {
-      position: absolute;
-      inset: -6px 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
-      will-change: transform;
+      align-items: center;
+      gap: 6px;
     }
-
-    .zoom-rib {
-      height: 1.5px;
-      margin: 0 6px;
-      border-radius: 1px;
-      background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(255,255,255,.06) 15%,
-        rgba(255,255,255,.22) 50%,
-        rgba(255,255,255,.06) 85%,
-        transparent 100%
-      );
+    .zoom-poly-stage { position: relative; width: 96px; height: 96px; }
+    .zoom-poly-stage svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .zoom-ring-track { fill: none; stroke: var(--color-border); stroke-width: 2; }
+    .zoom-ring-progress {
+      fill: none;
+      stroke: var(--color-accent);
+      stroke-width: 2;
+      transition: stroke-dasharray .18s ease;
     }
-
-    /* Red centre accent line */
-    .zoom-wheel-center {
-      position: absolute;
-      left: 0; right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      height: 2px;
-      z-index: 3;
-      background: linear-gradient(
-        to right,
-        transparent, #e74c3c 20%, #e74c3c 80%, transparent
-      );
-      pointer-events: none;
+    .zoom-poly-shape {
+      fill: rgba(201, 79, 79, .06);
+      stroke: var(--color-accent);
+      stroke-width: 2;
+      transition: all .18s ease;
     }
+    .zoom-readout {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 19px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+      line-height: 1.2;
+      text-align: center;
+    }
+    .zoom-readout-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--color-text-faint);
+      text-align: center;
+    }
+    .zoom-btns { display: flex; gap: 8px; }
+    .zoom-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-muted);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 0;
+      transition: color .15s ease, border-color .15s ease;
+    }
+    .zoom-btn:hover { color: var(--color-accent); border-color: var(--color-accent); }
 
     .fund-zoom-info {
       font-size: .7rem;
@@ -639,39 +609,6 @@
       color: var(--color-text-muted);
       min-height: 1.1em;
       text-align: center;
-    }
-
-    /* Light-theme barrel uses grey tones */
-    [data-theme="light"] .fund-zoom-wheel {
-      background:
-        radial-gradient(ellipse 60% 100% at 50% 50%,
-          #e0dedd 0%,
-          #c8c6c3 60%,
-          #a0a0a0 100%);
-      border-color: rgba(0,0,0,.18);
-      box-shadow:
-        inset  3px 0 10px rgba(0,0,0,.18),
-        inset -3px 0 10px rgba(0,0,0,.18),
-        0 4px 14px rgba(0,0,0,.15);
-    }
-    [data-theme="light"] .fund-zoom-wheel:hover {
-      border-color: var(--color-primary, #3498db);
-    }
-    [data-theme="light"] .fund-zoom-wheel::before {
-      background: linear-gradient(to bottom, rgba(200,198,196,.9) 0%, transparent 100%);
-    }
-    [data-theme="light"] .fund-zoom-wheel::after {
-      background: linear-gradient(to top, rgba(200,198,196,.9) 0%, transparent 100%);
-    }
-    [data-theme="light"] .zoom-rib {
-      background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(0,0,0,.04) 15%,
-        rgba(0,0,0,.15) 50%,
-        rgba(0,0,0,.04) 85%,
-        transparent 100%
-      );
     }
 
     /* Chart pan cursors */
@@ -697,22 +634,20 @@
     .fund-hscroll::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--color-primary, #3498db);
-      border: 2px solid var(--color-surface-2);
-      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
+      background: var(--color-primary);
+      border: 1px solid var(--color-border);
       cursor: grab;
       transition: transform .1s;
     }
 
     .fund-hscroll::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.15); }
     .fund-hscroll::-moz-range-thumb {
-      width: 18px; height: 18px; border-radius: 50%;
-      background: var(--color-primary, #3498db);
-      border: 2px solid var(--color-surface-2);
-      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+      width: 14px; height: 14px; border-radius: 2px;
+      background: var(--color-primary);
+      border: 1px solid var(--color-border);
       cursor: grab;
     }
 
@@ -772,7 +707,7 @@
       gap: 4px;
       padding: 4px 10px;
       border-radius: var(--radius-md);
-      border: 1.5px solid var(--color-border);
+      border: 1px solid var(--color-border);
       background: transparent;
       color: var(--color-text-muted);
       font-family: inherit;
@@ -820,7 +755,7 @@
     .gls-formula {
       font-size: .7rem;
       color: var(--color-primary);
-      font-family: monospace;
+      font-family: 'IBM Plex Mono', monospace;
       margin-bottom: 5px;
       line-height: 1.4;
     }
@@ -833,7 +768,7 @@
 
     /* Highlighted glossary card (jumped to via column click) */
     .gls-card.gls-highlighted {
-      border: 1.5px solid var(--color-primary);
+      border: 1px solid var(--color-primary);
       border-radius: var(--radius-md);
       background: var(--color-primary-highlight);
       margin: 4px 8px;
@@ -893,7 +828,17 @@
       white-space: nowrap;
     }
 
+    .fund-table tbody tr { cursor: pointer; }
     .fund-table tr:hover td { background: var(--color-surface-2); }
+
+    /* 點擊跳轉後的標記列：冷灰藍（--color-info 隨亮/暗主題自動換色） */
+    .fund-table tr.fund-row-marked td,
+    .fund-table tr.fund-row-marked:hover td { background: var(--color-lavender-highlight); }
+    .fund-table tr.fund-row-marked td:first-child {
+      border-left: 2px solid var(--color-info);
+      color: var(--color-info);
+      font-weight: 600;
+    }
 
     .fund-empty {
       display: flex;
@@ -914,6 +859,367 @@
     .dashboard-grid.sidebar-off .sidebar {
       display: none;
     }
+
+    /* ── 側欄手動收合（各模組通用，僅桌面寬度） ── */
+    @media (min-width: 769px) {
+      .sidebar { position: relative; }
+    }
+    .sidebar-collapse-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
+      color: var(--color-text-muted);
+      font-size: .9rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      z-index: 2;
+    }
+    .sidebar-collapse-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+    .dashboard-grid.sidebar-collapsed {
+      grid-template-columns: 40px 1fr;
+      transition: grid-template-columns .2s ease;
+    }
+    .dashboard-grid.sidebar-collapsed .sidebar { padding: var(--space-md) 4px; }
+    .dashboard-grid.sidebar-collapsed .sidebar-section { display: none; }
+    .dashboard-grid.sidebar-collapsed .sidebar-collapse-btn { position: static; margin: 0 auto; }
+    @media (max-width: 768px) {
+      .sidebar-collapse-btn { display: none; }
+    }
+
+    /* ── M3 指標詳細說明（側欄） ── */
+    .tech-detail-name { font-size: .95rem; font-weight: 600; color: var(--color-text); }
+    .tech-detail-en { font-size: .75rem; color: var(--color-text-faint); margin-bottom: 10px; }
+    .tech-detail-row { margin-bottom: 10px; }
+    .tech-detail-label { font-size: .7rem; color: var(--color-text-faint); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .tech-detail-formula { font-size: .78rem; color: var(--color-text); font-family: 'IBM Plex Mono', monospace; line-height: 1.5; word-break: break-all; }
+    .tech-detail-lag { font-size: .8rem; color: var(--color-warning); }
+    .tech-add-btn { width: 100%; margin-top: 4px; }
+    .tech-axis-bar-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: .74rem; }
+    .tech-axis-bar-label { width: 56px; flex-shrink: 0; color: var(--color-text-muted); }
+    .tech-axis-bar-track { flex: 1; height: 6px; border-radius: 3px; background: var(--color-surface-2); overflow: hidden; }
+    .tech-axis-bar-fill { height: 100%; border-radius: 3px; }
+    .tech-axis-bar-val { width: 30px; text-align: right; color: var(--color-text-faint); font-variant-numeric: tabular-nums; }
+
+    /* ── M3 技術指標 ── */
+    .tech-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      padding: 16px;
+    }
+    @media (max-width: 900px) {
+      .tech-layout { grid-template-columns: 1fr; }
+    }
+    .tech-map-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .tech-map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+    }
+    .tech-map-header > div:first-child { min-width: 0; }
+    .tech-map-card h2 {
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 4px;
+    }
+    .tech-hint {
+      font-size: .75rem;
+      color: var(--color-text-faint);
+      margin-bottom: 12px;
+    }
+    .tech-view-switch {
+      display: flex;
+      gap: 3px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+    .tech-view-btn {
+      border: none;
+      background: none;
+      padding: 5px 10px;
+      font-size: .75rem;
+      font-weight: 500;
+      border-radius: 2px;
+      cursor: pointer;
+      color: var(--color-text-faint);
+      white-space: nowrap;
+    }
+    .tech-view-btn.active { background: var(--color-surface); color: var(--color-text); font-weight: 600; }
+    #tech-map-canvas { cursor: grab; touch-action: none; }
+    #tech-map-canvas:active { cursor: grabbing; }
+    .tech-grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      grid-auto-rows: 180px;   /* 卡片固定行高:名稱長短不影響 */
+      gap: 10px;
+      width: 100%;
+    }
+    /* 外框:左上 45° 缺角 + 缺角外一條平行短線。框線畫在 ::before,
+       ::after 內縮 1px 當底色,等效於 1px 邊框(clip-path 會吃掉一般 border)。 */
+    .tech-grid-card {
+      --frame: var(--color-border);
+      --fill: var(--color-surface-2);
+      --chamfer: 20px;
+      position: relative;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      overflow: hidden;
+      background-image: linear-gradient(to bottom right,
+        transparent calc(50% - .7px), var(--frame) calc(50% - .7px),
+        var(--frame) calc(50% + .7px), transparent calc(50% + .7px));
+      background-size: 14px 14px;
+      background-repeat: no-repeat;
+    }
+    .tech-grid-card::before,
+    .tech-grid-card::after {
+      content: '';
+      position: absolute;
+      border-radius: var(--radius-md);
+      clip-path: polygon(0 var(--chamfer), var(--chamfer) 0, 100% 0, 100% 100%, 0 100%);
+    }
+    .tech-grid-card::before { inset: 0; background: var(--frame); }
+    .tech-grid-card::after { inset: 1px; background: var(--fill); }
+    .tech-grid-card > * { position: relative; z-index: 1; }
+    .tech-grid-card:hover { --frame: var(--color-text-faint); }
+    .tech-grid-card.selected { --frame: var(--color-accent); }
+    .tech-grid-card.previewed:not(.selected) { --frame: var(--color-gold); }
+    .tech-grid-card svg { display: block; margin: 0 auto; }
+    .tech-grid-card-name { font-size: .82rem; font-weight: 600; color: var(--color-text); margin-top: 2px; }
+    .tech-grid-card-en { font-size: .66rem; color: var(--color-text-faint); }
+    .tech-right {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .tech-basket-card, .tech-radar-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+    .tech-basket-card h3, .tech-radar-card h3 {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 10px;
+    }
+    .tech-empty {
+      font-size: .8rem;
+      color: var(--color-text-faint);
+      text-align: center;
+      padding: 12px 0;
+    }
+    .tech-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
+      padding: 5px 10px;
+      margin-bottom: 6px;
+      font-size: .8rem;
+    }
+    .tech-tag-name { font-weight: 600; color: var(--color-text); }
+    .tech-tag-zh   { color: var(--color-text-muted); flex: 1; }
+    .tech-tag-rm {
+      background: none; border: none; cursor: pointer;
+      color: var(--color-text-faint); font-size: 1rem; line-height: 1;
+      padding: 0 2px; margin-left: auto;
+      transition: color .15s;
+    }
+    .tech-tag-rm:hover { color: var(--color-error); }
+    #tech-radar { display: flex; justify-content: center; }
+    .tech-score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: .8rem;
+      color: var(--color-text-muted);
+      padding: 5px 0;
+      border-top: 1px solid var(--color-divider);
+    }
+    .tech-score-val { font-weight: 600; color: var(--color-text); }
+    .tech-score-val small { font-weight: 400; color: var(--color-text-faint); margin-left: 4px; }
+    .tech-score-val.pos  { color: var(--color-success); }
+    .tech-score-val.warn { color: var(--color-warning); }
+    .tech-score-val.neg  { color: var(--color-error); }
+    .tech-warn {
+      font-size: .75rem;
+      color: var(--color-warning);
+      padding: 4px 0;
+      border-top: 1px solid var(--color-divider);
+    }
+    .tech-opt-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 0 16px 16px;
+    }
+    .tech-opt-card h2 { font-size: .95rem; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
+    .opt-item {
+      border-top: 1px solid var(--color-divider);
+      padding: 12px 0;
+    }
+    .opt-item:first-child { border-top: none; }
+    .opt-item-title { font-size: .82rem; color: var(--color-text); margin-bottom: 8px; }
+    .opt-item-title b { color: var(--color-primary); }
+    .opt-item-title .pos { color: var(--color-success); font-weight: 600; }
+    .opt-item-title .neg { color: var(--color-error); font-weight: 600; }
+    .opt-item-note { font-size: .72rem; color: var(--color-text-faint); margin-top: 6px; }
+    .opt-item-current { font-size: .74rem; color: var(--color-text-muted); margin: 4px 0 8px; }
+    .opt-item canvas { display: block; }
+    /* 策略測試器（TradingView 式底部面板） */
+    .opt-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .opt-ind-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .opt-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--color-divider); margin-bottom: 14px; overflow-x: auto; }
+    .opt-tab {
+      padding: 8px 14px; background: none; border: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      color: var(--color-text-muted); font-family: inherit; font-size: .82rem;
+      cursor: pointer; white-space: nowrap; transition: color .15s;
+    }
+    .opt-tab:hover { color: var(--color-text); }
+    .opt-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+    .opt-pane[hidden] { display: none; }
+    .opt-kpi-meta { font-size: .78rem; color: var(--color-text-muted); margin-bottom: 10px; }
+    .opt-kpi-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .opt-kpi {
+      background: var(--color-surface-2); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 8px 14px; min-width: 96px;
+    }
+    .opt-kpi-label { display: block; font-size: .7rem; color: var(--color-text-faint); margin-bottom: 2px; }
+    .opt-kpi-val { font-size: 1rem; font-weight: 600; color: var(--color-text); font-variant-numeric: tabular-nums; }
+    .opt-kpi-val.pos { color: var(--color-success); }
+    .opt-kpi-val.neg { color: var(--color-error); }
+    .opt-equity-wrap { height: 260px; position: relative; }
+    .opt-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .opt-table th, .opt-table td {
+      padding: 6px 10px; text-align: right;
+      border-bottom: 1px solid var(--color-divider); font-variant-numeric: tabular-nums;
+    }
+    .opt-table th { color: var(--color-text-faint); font-weight: 500; position: sticky; top: 0; background: var(--color-surface); }
+    .opt-table td { color: var(--color-text-muted); }
+    .opt-table th:first-child, .opt-table td:first-child { text-align: left; }
+    .opt-table .pos { color: var(--color-success); }
+    .opt-table .neg { color: var(--color-error); }
+    .opt-table-scroll { max-height: 300px; overflow: auto; }
+    /* 交易清單：列可點選，進場價 info／出場價 gold 對應圖上三角與虛線（DESIGN-HANDOFF §5a） */
+    .opt-trades tbody tr { cursor: pointer; }
+    .opt-trades td.t-entry { color: var(--color-info); }
+    .opt-trades td.t-exit { color: var(--color-gold); }
+    .opt-trades tr.sel-trade td {
+      background: var(--color-primary-highlight);
+      border-top: 1px solid var(--color-accent); border-bottom: 1px solid var(--color-accent);
+    }
+    .opt-trades tr.sel-trade td:first-child { border-left: 1px solid var(--color-accent); }
+    .opt-trades tr.sel-trade td:last-child { border-right: 1px solid var(--color-accent); }
+    .opt-section-title { font-size: .82rem; font-weight: 600; color: var(--color-text); margin: 14px 0 8px; }
+    .opt-slice-controls {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin-bottom: 10px; font-size: .78rem; color: var(--color-text-muted);
+    }
+    .opt-slice-controls select {
+      padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--color-border);
+      background: var(--color-surface-2); color: var(--color-text); font-family: inherit; font-size: .78rem;
+    }
+    #opt-heatmap-wrap { overflow-x: auto; }
+    .opt-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 14px; }
+    .opt-field { display: flex; flex-direction: column; gap: 4px; font-size: .75rem; color: var(--color-text-muted); }
+    .opt-field input, .opt-field select {
+      padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--color-border);
+      background: var(--color-surface-2); color: var(--color-text); font-family: inherit; font-size: .8rem; outline: none;
+    }
+    .opt-field input:focus, .opt-field select:focus { border-color: var(--color-primary); }
+    .opt-form-section {
+      grid-column: 1 / -1; font-size: .78rem; font-weight: 600; color: var(--color-text);
+      border-top: 1px solid var(--color-divider); padding-top: 10px; margin-top: 4px;
+    }
+    .opt-form-actions { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; }
+    .overlay-toggles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .overlay-chip {
+      font-size: .74rem;
+      padding: 4px 10px;
+      border-radius: 2px;
+      font-family: 'IBM Plex Mono', monospace;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      color: var(--color-text-faint);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .overlay-chip.active { color: var(--color-text); border-color: var(--color-accent); background: var(--color-primary-highlight); }
+    .overlay-chip:hover { border-color: var(--color-accent); }
+    .tech-price-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 0 16px 16px;
+    }
+    .tech-price-card h2 { font-size: .95rem; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
+    .tech-price-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .tech-price-controls input, .tech-price-controls select {
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      font-family: inherit;
+      font-size: .85rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .tech-price-controls input { cursor: text; }
+    .tech-price-controls input:focus, .tech-price-controls select:focus { border-color: var(--color-primary); }
+    #stock-symbol { width: 120px; text-transform: uppercase; }
+    #stock-provider { width: 150px; }
+    #stock-interval { width: 100px; }
+    #stock-apikey, #stock-apisecret { width: 160px; }
+    .tech-price-status { font-size: .78rem; color: var(--color-text-faint); }
+    #tech-opt-progress { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .opt-prog-row { display: flex; align-items: center; gap: 8px; font-size: .72rem; }
+    .opt-prog-name { flex: 0 0 88px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .opt-prog-track { flex: 1; height: 6px; border: 1px solid var(--color-border); background: var(--color-surface-2); overflow: hidden; }
+    .opt-prog-fill { display: block; height: 100%; width: 0; background: var(--color-accent); transition: width .15s ease; }
+    .opt-prog-text { flex: 0 1 auto; color: var(--color-text-faint); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .opt-prog-row.skip { opacity: .55; }
+    .opt-prog-row.fail .opt-prog-fill { background: var(--color-gold); }
+    .opt-prog-row.fail .opt-prog-text { color: var(--color-gold); }
+    .tech-price-chart-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .tech-price-chart-wrap { height: 320px; position: relative; }
   </style>
 </head>
 
@@ -930,18 +1236,19 @@
       </div>
       <nav class="tab-nav" role="tablist" aria-label="模組導覽">
         <button class="tab-btn" role="tab" aria-selected="true" data-module="m1-macro" id="tabM1"><span
-            class="tab-icon">📊</span><span class="tab-text">大環境</span></button>
+            class="tab-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="8" width="3" height="6"/><rect x="6.5" y="4" width="3" height="10"/><rect x="11" y="1.5" width="3" height="12.5"/></svg></span><span class="tab-text">大環境</span></button>
         <button class="tab-btn" role="tab" aria-selected="false" data-module="m2-fundamental" id="tabM2"><span
-            class="tab-icon">📈</span><span class="tab-text">基本面</span></button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-module="m3-technical" id="tabM3" disabled><span
-            class="tab-icon">📉</span><span class="tab-text">技術指標</span><span class="badge-soon">即將推出</span></button>
+            class="tab-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1.5,12.5 6,8 9,10.5 14.5,3.5"/><polyline points="10.5,3.5 14.5,3.5 14.5,7.5"/></svg></span><span class="tab-text">基本面</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-module="m3-technical" id="tabM3"><span
+            class="tab-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="2" x2="4" y2="14"/><rect x="2.5" y="5" width="3" height="5"/><line x1="11" y1="2" x2="11" y2="14"/><rect x="9.5" y="4" width="3" height="6"/></svg></span><span class="tab-text">技術指標</span></button>
         <button class="tab-btn" role="tab" aria-selected="false" data-module="m4-strategy" id="tabM4" disabled><span
-            class="tab-icon">🎯</span><span class="tab-text">交易策略</span><span class="badge-soon">即將推出</span></button>
+            class="tab-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2.5"/></svg></span><span class="tab-text">交易策略</span><span class="badge-soon">即將推出</span></button>
         <button class="tab-btn" role="tab" aria-selected="false" data-module="m5-ai" id="tabM5" disabled><span
-            class="tab-icon">🤖</span><span class="tab-text">AI 決策</span><span class="badge-soon">即將推出</span></button>
+            class="tab-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="11" height="9"/><line x1="8" y1="1.5" x2="8" y2="4"/><circle cx="5.5" cy="8" r="0.5"/><circle cx="10.5" cy="8" r="0.5"/></svg></span><span class="tab-text">AI 決策</span><span class="badge-soon">即將推出</span></button>
       </nav>
       <div class="header-actions">
-        <button class="icon-btn" id="themeToggle" aria-label="切換主題" title="亮/暗模式">🌙</button>
+        <button class="icon-btn" id="updownToggle" aria-label="切換漲跌配色" title="台式 紅漲綠跌 / 美式 綠漲紅跌" style="font-size:.68rem; width:auto; padding:0 8px; font-family:'IBM Plex Mono',monospace;">紅漲</button>
+        <button class="icon-btn" id="themeToggle" aria-label="切換主題" title="亮/暗模式"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 9.5A6 6 0 1 1 6.5 2.5a5 5 0 0 0 7 7z"/></svg></button>
       </div>
     </header>
 
@@ -950,44 +1257,55 @@
 
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
-        <div class="sidebar-section">
-          <div class="sidebar-title">指定資料日期</div>
-          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
-            <select id="dataYear" title="年份" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
-              <option value="">選擇年份</option>
-            </select>
-            <select id="dataMonth" title="月份" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
-              <option value="">選擇月份</option>
-            </select>
-            <select id="dataDay" title="日期" style="width:100%; padding:8px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
-              <option value="">選擇日期</option>
-            </select>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="收合／展開側欄" aria-label="收合側欄">&#8249;</button>
+        <div id="m1SidebarSections">
+          <div class="sidebar-section">
+            <div class="sidebar-title">指定資料日期</div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+              <select id="dataYear" title="年份" style="width:100%; padding:8px; border-radius:4px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
+                <option value="">選擇年份</option>
+              </select>
+              <select id="dataMonth" title="月份" style="width:100%; padding:8px; border-radius:4px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
+                <option value="">選擇月份</option>
+              </select>
+              <select id="dataDay" title="日期" style="width:100%; padding:8px; border-radius:4px; background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); font-family:inherit; font-size:.85rem; cursor:pointer;">
+                <option value="">選擇日期</option>
+              </select>
+            </div>
+            <button id="dataDateConfirm" class="btn-primary" style="width:100%; padding:6px; font-size:.8rem;">確認</button>
           </div>
-          <button id="dataDateConfirm" class="btn-primary" style="width:100%; padding:6px; font-size:.8rem;">確認</button>
+
+          <!-- Drum Picker -->
+          <div class="sidebar-section drum-picker">
+            <div id="drumDateDisplay" class="drum-date-display"></div>
+            <button class="drum-btn-y" id="drumPlus" title="數值增加">+</button>
+            <div class="drum-row">
+              <div class="drum-side-left">
+                <span class="drum-side-label" id="drumLabelLeft"></span>
+                <button class="drum-btn-x" id="drumLeft">&#8249;</button>
+              </div>
+              <div class="drum-viewport" id="drumViewport">
+                <div class="drum-track" id="drumTrack"></div>
+              </div>
+              <div class="drum-side-right">
+                <button class="drum-btn-x" id="drumRight">&#8250;</button>
+                <span class="drum-side-label" id="drumLabelRight"></span>
+              </div>
+            </div>
+            <button class="drum-btn-y" id="drumMinus" title="數值減少">&#8722;</button>
+            <div class="drum-mode-tabs">
+              <span class="drum-mode-tab active" data-mode="0">年</span>
+              <span class="drum-mode-tab" data-mode="1">月</span>
+              <span class="drum-mode-tab" data-mode="2">日</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Drum Picker -->
-        <div class="sidebar-section drum-picker">
-          <div id="drumDateDisplay" class="drum-date-display"></div>
-          <button class="drum-btn-y" id="drumPlus" title="數值增加">+</button>
-          <div class="drum-row">
-            <div class="drum-side-left">
-              <span class="drum-side-label" id="drumLabelLeft"></span>
-              <button class="drum-btn-x" id="drumLeft">&#8249;</button>
-            </div>
-            <div class="drum-viewport" id="drumViewport">
-              <div class="drum-track" id="drumTrack"></div>
-            </div>
-            <div class="drum-side-right">
-              <button class="drum-btn-x" id="drumRight">&#8250;</button>
-              <span class="drum-side-label" id="drumLabelRight"></span>
-            </div>
-          </div>
-          <button class="drum-btn-y" id="drumMinus" title="數值減少">&#8722;</button>
-          <div class="drum-mode-tabs">
-            <span class="drum-mode-tab active" data-mode="0">年</span>
-            <span class="drum-mode-tab" data-mode="1">月</span>
-            <span class="drum-mode-tab" data-mode="2">日</span>
+        <!-- M3 技術指標：指標詳細說明（取代日期選擇器） -->
+        <div class="sidebar-section" id="m3SidebarSection" style="display:none">
+          <div class="sidebar-title">指標詳細說明</div>
+          <div id="m3IndicatorDetailBody">
+            <p class="tech-empty">點擊右側圖譜上的球體查看指標說明</p>
           </div>
         </div>
       </aside>
@@ -1032,7 +1350,7 @@
               </div>
               <div class="gauge-info">
                 <div id="regimeBadge" class="regime-badge cautious" style="margin-bottom:12px">
-                  <span id="regimeIcon">⚖️</span>
+                  <span id="regimeIcon" class="regime-dot"></span>
                   <span id="regimeText">載入中…</span>
                 </div>
                 <p style="color:var(--color-text-muted);font-size:.85rem;line-height:1.6" id="regimeDescription">
@@ -1042,7 +1360,7 @@
                   <!-- dynamically filled -->
                 </div>
                 <button class="btn-ghost openExplainBtn" style="margin-top:16px" id="openExplainBtn2">
-                  📖 查看評分說明書
+                  查看評分說明書
                 </button>
               </div>
             </div>
@@ -1052,7 +1370,7 @@
           <section class="card section-gap reveal" id="sectionB">
             <div class="card-title-row">
               <div class="card-title">四大面向評分 Dimension Scores</div>
-              <button class="icon-btn" id="dimFormulaBtn" title="查看計算公式" aria-label="四大面向計算公式">⚙️</button>
+              <button class="icon-btn" id="dimFormulaBtn" title="查看計算公式" aria-label="四大面向計算公式">公式</button>
             </div>
             <div class="dim-gauges-container" id="dimGaugesContainer">
               <!-- dynamically filled -->
@@ -1113,7 +1431,7 @@
 
           <!-- Section E: Explainability Button (prominent) -->
           <section class="card section-gap reveal" id="sectionE" style="text-align:center;padding:32px">
-            <div style="font-size:2rem;margin-bottom:8px">📖</div>
+            
             <h3 style="color:var(--color-text);margin-bottom:8px">景氣與政策綜合指標說明書</h3>
             <p
               style="color:var(--color-text-muted);font-size:.88rem;margin-bottom:16px;max-width:500px;margin-left:auto;margin-right:auto">
@@ -1132,7 +1450,7 @@
           <!-- Stock search header -->
           <div class="fund-header card">
             <div class="fund-search-wrap">
-              <span class="fund-search-icon">🔍</span>
+              <span class="fund-search-icon"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg></span>
               <input type="text" id="fundSearch" class="fund-search-input"
                      placeholder="輸入股票代號或公司名稱…" autocomplete="off">
               <div id="fundSearchDropdown" class="fund-dropdown"></div>
@@ -1151,35 +1469,40 @@
 
               <nav class="fund-tabs">
                 <button class="fund-tab active" data-tab="eps">
-                  <span class="fund-tab-icon">📊</span><span>EPS / 盈利</span>
+                  <span>EPS / 盈利</span>
                 </button>
                 <button class="fund-tab" data-tab="income">
-                  <span class="fund-tab-icon">📋</span><span>損益表</span>
+                  <span>損益表</span>
                 </button>
                 <button class="fund-tab" data-tab="balance">
-                  <span class="fund-tab-icon">⚖️</span><span>資產負債</span>
+                  <span>資產負債</span>
                 </button>
                 <button class="fund-tab" data-tab="cashflow">
-                  <span class="fund-tab-icon">💰</span><span>現金流量</span>
+                  <span>現金流量</span>
                 </button>
               </nav>
 
-              <!-- X-axis zoom wheel -->
+              <!-- X-axis 多邊形刻度器 -->
               <div class="fund-zoom-section">
                 <div class="fund-zoom-label">X 軸縮放</div>
-                <div class="fund-zoom-wheel" id="fundZoomWheel" title="上下拖曳或滾輪縮放時間軸">
-                  <div class="zoom-wheel-body" id="fundZoomWheelBody">
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
-                    <div class="zoom-rib"></div><div class="zoom-rib"></div>
+                <div class="fund-zoom-wheel" id="fundZoomWheel" title="滾輪或 ± 按鈕縮放時間軸">
+                  <div class="zoom-poly-stage">
+                    <svg viewBox="0 0 96 96">
+                      <circle class="zoom-ring-track" cx="48" cy="48" r="45" pathLength="100"
+                              stroke-dasharray="0.5 2.357" transform="rotate(-90 48 48)"/>
+                      <circle class="zoom-ring-progress" id="fundZoomRing" cx="48" cy="48" r="45"
+                              pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 48 48)"/>
+                      <polygon class="zoom-poly-shape" id="fundZoomPoly" points=""/>
+                    </svg>
                   </div>
-                  <div class="zoom-wheel-center"></div>
+                  <div class="zoom-readout" id="fundZoomReadout">×1.0</div>
+                  <div class="zoom-readout-sub" id="fundZoomReadoutSub">3 邊・刻度 0/35</div>
+                  <div class="zoom-btns">
+                    <button class="zoom-btn" id="fundZoomMinus" type="button" aria-label="縮小">−</button>
+                    <button class="zoom-btn" id="fundZoomPlus" type="button" aria-label="放大">＋</button>
+                  </div>
                 </div>
-                <div class="fund-zoom-info" id="fundZoomInfo"></div>
+                <div class="fund-zoom-info" id="fundZoomInfo" hidden></div>
               </div>
 
             </div><!-- /fund-left-col -->
@@ -1200,7 +1523,7 @@
             <section class="fund-table-panel card">
               <div class="fund-table-header">
                 <div class="fund-panel-title" id="fundTableTitle">季度明細</div>
-                <button class="fund-guide-btn" id="fundGuideBtn" title="查看指標說明">📖 說明書</button>
+                <button class="fund-guide-btn" id="fundGuideBtn" title="查看指標說明">說明書</button>
               </div>
               <div class="fund-table-scroll" id="fundTableWrap">
                 <div class="fund-empty">請選擇股票查看資料</div>
@@ -1210,24 +1533,108 @@
           </div><!-- /fund-body -->
         </div><!-- /m2-fundamental -->
 
-        <!-- ==================== M3-M5: Placeholders ==================== -->
+        <!-- ==================== M3: 技術指標 ==================== -->
         <div class="module-panel" id="m3-technical" style="display:none">
-          <div class="module-placeholder">
-            <div class="placeholder-icon">📉</div>
-            <h2>技術指標分析</h2>
-            <p>此模組正在開發中，將提供 RSI、MACD、布林通道等技術指標信號。</p>
+          <div class="tech-layout">
+            <div class="tech-map-card">
+              <div class="tech-map-header">
+                <div>
+                  <h2>指標屬性圖譜</h2>
+                  <span class="tech-hint" id="tech-map-hint">拖曳旋轉檢視 ／ 點擊球體查看說明，於左側「新增至策略」加入 ／ 六頂點（三角柱）為教科書錨點</span>
+                </div>
+                <div class="tech-view-switch" role="tablist">
+                  <button class="tech-view-btn active" data-view="3d" role="tab" aria-selected="true">3D 重力圖</button>
+                  <button class="tech-view-btn" data-view="grid" role="tab" aria-selected="false">卡片雷達</button>
+                </div>
+              </div>
+              <canvas id="tech-map-canvas"></canvas>
+              <div class="tech-grid-view" id="tech-grid-view" style="display:none"></div>
+            </div>
+            <div class="tech-right">
+              <div class="tech-basket-card">
+                <h3>策略籃 <span id="tech-basket-count"></span></h3>
+                <div id="tech-basket"></div>
+              </div>
+              <div class="tech-radar-card">
+                <h3>策略雷達圖</h3>
+                <div id="tech-radar"></div>
+                <div id="tech-score-info"></div>
+              </div>
+              <div class="tech-basket-card">
+                <button class="btn-primary" id="tech-optimize-btn" style="width:100%">回測最佳化參數並疊圖</button>
+                <div class="tech-price-status" id="tech-optimize-status">需先在下方抓取股價，再回測策略籃中的指標</div>
+                <div id="tech-opt-progress"></div>
+              </div>
+            </div>
+          </div>
+          <div class="tech-price-card">
+            <h2>個股股價走勢</h2>
+            <span class="tech-hint" id="stock-provider-hint"></span>
+            <div class="tech-price-controls">
+              <input type="text" id="stock-symbol" placeholder="股票代碼，如 AAPL">
+              <select id="stock-provider" title="資料來源">
+                <option value="fmp">FMP（日線）</option>
+                <option value="twelvedata">Twelve Data（可分鐘線）</option>
+                <option value="alpaca">Alpaca（可分鐘線）</option>
+              </select>
+              <select id="stock-interval" title="K棒週期"></select>
+              <input type="password" id="stock-apikey" placeholder="API Key">
+              <input type="password" id="stock-apisecret" placeholder="Secret Key" style="display:none">
+              <button class="btn-primary" id="stock-fetch-btn">抓取</button>
+              <span class="tech-price-status" id="stock-status"></span>
+            </div>
+            <div id="stock-overlay-toggles" class="overlay-toggles"></div>
+            <div class="tech-price-chart-toolbar">
+              <span class="tech-hint">滾輪縮放／拖曳平移（X 軸）</span>
+              <button class="btn-ghost" id="stock-zoom-reset" style="padding:3px 10px;font-size:.75rem">⟲ 重置縮放</button>
+            </div>
+            <div class="tech-price-chart-wrap">
+              <canvas id="stock-price-chart"></canvas>
+            </div>
+          </div>
+          <!-- 策略測試器（TradingView 式底部面板；technical.js 渲染） -->
+          <div class="tech-opt-card" id="tech-opt-card" style="display:none">
+            <div class="opt-header">
+              <h2>策略測試器</h2>
+              <div class="opt-ind-chips" id="opt-ind-chips"></div>
+            </div>
+            <nav class="opt-tabs" id="opt-tabs">
+              <button class="opt-tab active" data-tab="overview">總覽</button>
+              <button class="opt-tab" data-tab="perf">績效摘要</button>
+              <button class="opt-tab" data-tab="plateau">參數高原</button>
+              <button class="opt-tab" data-tab="trades">交易清單</button>
+              <button class="opt-tab" data-tab="settings">設定</button>
+            </nav>
+            <div class="opt-pane" data-pane="overview">
+              <div id="opt-kpis"></div>
+              <div id="opt-converge"></div>
+              <div class="opt-equity-wrap"><canvas id="opt-equity-chart"></canvas></div>
+            </div>
+            <div class="opt-pane" data-pane="perf" hidden>
+              <div id="opt-perf-body"></div>
+            </div>
+            <div class="opt-pane" data-pane="plateau" hidden>
+              <div class="opt-slice-controls" id="opt-slice-controls"></div>
+              <div id="opt-heatmap-wrap"></div>
+            </div>
+            <div class="opt-pane" data-pane="trades" hidden>
+              <div class="opt-table-scroll" id="opt-trades-body"></div>
+            </div>
+            <div class="opt-pane" data-pane="settings" hidden>
+              <form id="opt-settings-form" class="opt-form-grid"></form>
+            </div>
           </div>
         </div>
         <div class="module-panel" id="m4-strategy" style="display:none">
           <div class="module-placeholder">
-            <div class="placeholder-icon">🎯</div>
+            <div class="placeholder-icon placeholder-geo"></div>
             <h2>交易策略制定</h2>
             <p>此模組正在開發中，將提供買入點建議、止損位與部位大小建議。</p>
           </div>
         </div>
         <div class="module-panel" id="m5-ai" style="display:none">
           <div class="module-placeholder">
-            <div class="placeholder-icon">🤖</div>
+            <div class="placeholder-icon placeholder-geo"></div>
             <h2>AI Agent 決策</h2>
             <p>此模組正在開發中，將綜合所有模組輸出產生 AI 最終投資建議。</p>
           </div>
@@ -1247,7 +1654,7 @@
 
     <!-- ═══ 面向一 ═══ -->
     <div class="clip-reveal-wrapper">
-      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">📋 面向一：信用市場與金融中介健康度</h3>
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">面向一：信用市場與金融中介健康度</h3>
     </div>
     <p class="word-scrub">
       觀察市場流動性壓力、企業融資成本與銀行體系的資產品質。當信用利差飆升或銀行壞帳上升時，代表金融環境惡化，是股市大跌的領先警報。
@@ -1305,7 +1712,7 @@
 
     <!-- ═══ 面向二 ═══ -->
     <div class="clip-reveal-wrapper">
-      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">⚖️ 面向二：政策預期與體制可信度</h3>
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">面向二：政策預期與體制可信度</h3>
     </div>
     <p class="word-scrub">
       追蹤聯準會 (Fed) 政策路徑、縮表進度與市場對未來的定價。政策方向決定了資金水龍頭的開關力道。
@@ -1393,7 +1800,7 @@
 
     <!-- ═══ 面向三 ═══ -->
     <div class="clip-reveal-wrapper">
-      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">🏭 面向三：國家經濟情況</h3>
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">面向三：國家經濟情況</h3>
     </div>
     <p class="word-scrub">
       評估通膨、就業、生產力與消費者信心。經濟動能決定了企業獲利前景與景氣循環階段。
@@ -1481,7 +1888,7 @@
 
     <!-- ═══ 面向四 ═══ -->
     <div class="clip-reveal-wrapper">
-      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">🌐 面向四：國際資本傳導與匯率環境</h3>
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">面向四：國際資本傳導與匯率環境</h3>
     </div>
     <p class="word-scrub">
       追蹤美元強弱、跨境資金流向與外資對美債的偏好。全球資金流動直接影響美國資產的價格與流動性。
@@ -1543,16 +1950,16 @@
 
     <!-- ═══ 總結 ═══ -->
     <div class="clip-reveal-wrapper">
-      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">📝 總結：面向之間的連動邏輯</h3>
+      <h3 class="clip-reveal" style="color:var(--color-primary);margin-top:24px">總結：面向之間的連動邏輯</h3>
     </div>
-    <p class="word-scrub">
-      <strong>⚠️ 風險提示：</strong>當面向一（信用）惡化與面向二（利率倒掛）同時發生，需警戒金融危機。
+    <p class="word-scrub" style="border-left:2px solid var(--color-gold);padding-left:12px">
+      <strong>風險提示：</strong>當面向一（信用）惡化與面向二（利率倒掛）同時發生，需警戒金融危機。
     </p>
-    <p class="word-scrub">
-      <strong>🔥 通膨邏輯：</strong>當面向三（CPI）高企，會迫使面向二（DFF）上升，進而壓縮面向一的流動性。
+    <p class="word-scrub" style="border-left:2px solid var(--color-gold);padding-left:12px">
+      <strong>通膨邏輯：</strong>當面向三（CPI）高企，會迫使面向二（DFF）上升，進而壓縮面向一的流動性。
     </p>
-    <p class="word-scrub" style="font-weight:500">
-      <strong>🌍 全球視角：</strong>若面向四（TIC）出現大規模拋售，需注意面向一（DGS10）的非預期性飆升。
+    <p class="word-scrub" style="font-weight:500;border-left:2px solid var(--color-gold);padding-left:12px">
+      <strong>全球視角：</strong>若面向四（TIC）出現大規模拋售，需注意面向一（DGS10）的非預期性飆升。
     </p>
   </div>
 
@@ -1586,6 +1993,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <script
     src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
   <script src="./assets/js/drum.js"></script>
@@ -1595,6 +2004,9 @@
   <script src="./assets/js/animations.js"></script>
   <script src="./assets/js/fundamentals.js"></script>
   <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/backtest.js"></script>
+  <script src="./assets/js/optimizer.js"></script>
+  <script src="./assets/js/technical.js"></script>
 </body>
 
 </html>

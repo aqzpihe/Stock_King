@@ -9,54 +9,62 @@ html { scroll-behavior: smooth; }
 
 /* ===================== CSS Tokens ===================== */
 :root, [data-theme="dark"] {
-  /* 底色（純黑系） */
-  --color-bg:               #0a0a0a;
-  --color-surface:          #111111;
-  --color-surface-2:        #161616;
-  --color-surface-offset:   #1a1a1a;
-  --color-surface-offset-2: #1f1f1f;
-  --color-surface-dynamic:  #272727;
-  --color-divider:          #2a2a2a;
-  --color-border:           #333333;
+  /* 底色（深緋紅 × 幾何理性） */
+  --color-bg:               #0D0E10;
+  --color-surface:          #15161A;
+  --color-surface-2:        #1B1D22;
+  --color-surface-offset:   #17181C;
+  --color-surface-offset-2: #22242A;
+  --color-surface-dynamic:  #2A2D34;
+  --color-divider:          #22242A;
+  --color-border:           #2A2D34;
 
   /* 文字 */
-  --color-text:             #f0efec;
-  --color-text-muted:       #888884;
-  --color-text-faint:       #505050;
-  --color-text-inverse:     #0a0a0a;
+  --color-text:             #E8E6E3;
+  --color-text-muted:       #9A9DA6;
+  --color-text-faint:       #6B6E78;
+  --color-text-inverse:     #0D0E10;
 
-  /* 主強調色（深紅） */
-  --color-primary:          #c0392b;
-  --color-primary-hover:    #e74c3c;
-  --color-primary-active:   #ff6b6b;
-  --color-primary-highlight:#2d1010;
+  /* 主強調色（深緋紅） */
+  --color-primary:          #8B2E2E;
+  --color-primary-hover:    #A03636;
+  --color-primary-active:   #C94F4F;
+  --color-primary-highlight:rgba(139,46,46,.12);
+  --color-accent:           #C94F4F;
 
-  /* 正向信號（綠） */
-  --color-success:          #27ae60;
-  --color-success-hover:    #2ecc71;
-  --color-success-highlight:#0d2118;
+  /* 輔助資料系列 */
+  --color-info:             #7A93B8;
+  --color-gold:             #C9A227;
 
-  /* 負向信號（紅） */
-  --color-error:            #c0392b;
-  --color-error-hover:      #e74c3c;
-  --color-error-highlight:  #2d1010;
+  /* 漲跌（台式預設，只用於數字；美式由 JS 交換） */
+  --color-up:               #E25A5A;
+  --color-down:             #3E9B6B;
 
-  /* 薰衣草紫（日期選擇高亮） */
-  --color-lavender:           #c4a8e0;
-  --color-lavender-highlight: rgba(196, 168, 224, 0.18);
+  /* 正向信號 → up 色系；負向 → down（隨台式/美式切換連動） */
+  --color-success:          var(--color-up);
+  --color-success-hover:    var(--color-up);
+  --color-success-highlight:rgba(226,90,90,.10);
 
-  /* 警示（琥珀黃） */
-  --color-warning:          #d4a017;
-  --color-warning-highlight:#2a1f05;
+  --color-error:            var(--color-down);
+  --color-error-hover:      var(--color-down);
+  --color-error-highlight:  rgba(62,155,107,.10);
 
-  /* 圖表系列色 */
-  --chart-color-1:          #c0392b;
-  --chart-color-2:          #3498db;
-  --chart-color-3:          #9b59b6;
-  --chart-color-4:          #e67e22;
-  --chart-color-5:          #1abc9c;
-  --chart-color-6:          #f39c12;
-  --chart-color-7:          #e74c3c;
+  /* 薰衣草紫（日期選擇高亮）→ 冷灰藍 */
+  --color-lavender:           #7A93B8;
+  --color-lavender-highlight: rgba(122, 147, 184, 0.16);
+
+  /* 警示（金） */
+  --color-warning:          #C9A227;
+  --color-warning-highlight:rgba(201,162,39,.12);
+
+  /* 圖表系列色（四色＋灰階） */
+  --chart-color-1:          #8B2E2E;
+  --chart-color-2:          #7A93B8;
+  --chart-color-3:          #C9A227;
+  --chart-color-4:          #C94F4F;
+  --chart-color-5:          #9A9DA6;
+  --chart-color-6:          #C9A227;
+  --chart-color-7:          #C94F4F;
 
   /* 陰影 */
   --shadow-sm:  0 1px 3px rgba(0,0,0,.4);
@@ -64,11 +72,11 @@ html { scroll-behavior: smooth; }
   --shadow-lg:  0 8px 32px rgba(0,0,0,.6);
   --shadow-glow:0 0 20px rgba(192,57,43,.15);
 
-  /* 圓角 */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* 圓角（0/2/4 三檔） */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 0;
+  --radius-xl: 0;
 
   /* 間距 */
   --space-xs: 4px;
@@ -86,27 +94,37 @@ html { scroll-behavior: smooth; }
 
 /* 亮色模式 */
 [data-theme="light"] {
-  --color-bg:               #f4f3f0;
-  --color-surface:          #f9f8f6;
-  --color-surface-2:        #ffffff;
-  --color-surface-offset:   #edecea;
-  --color-surface-offset-2: #e5e4e1;
-  --color-surface-dynamic:  #dddcd9;
-  --color-divider:          #d0cfcc;
-  --color-border:           #d8d6d2;
-  --color-text:             #1a1a1a;
-  --color-text-muted:       #6b6b6b;
-  --color-text-faint:       #999999;
-  --color-text-inverse:     #f0efec;
-  --color-primary:          #a93226;
-  --color-primary-hover:    #c0392b;
-  --color-primary-active:   #e74c3c;
-  --color-primary-highlight:#fce8e6;
-  --color-success-highlight:#e8f8ef;
-  --color-error-highlight:  #fce8e6;
-  --color-warning-highlight:#fef9e7;
-  --color-lavender:           #7c5cbf;
-  --color-lavender-highlight: rgba(124, 92, 191, 0.12);
+  --color-bg:               #F4F2EE;
+  --color-surface:          #FBFAF8;
+  --color-surface-2:        #FFFFFF;
+  --color-surface-offset:   #EFEDE9;
+  --color-surface-offset-2: #E7E5E0;
+  --color-surface-dynamic:  #DEDCD6;
+  --color-divider:          #E2DFD9;
+  --color-border:           #D8D5CF;
+  --color-text:             #26272B;
+  --color-text-muted:       #6B6E78;
+  --color-text-faint:       #9A9DA6;
+  --color-text-inverse:     #F4F2EE;
+  --color-primary:          #8B2E2E;
+  --color-primary-hover:    #A03636;
+  --color-primary-active:   #A93226;
+  --color-primary-highlight:rgba(139,46,46,.08);
+  --color-accent:           #A93226;
+  --color-info:             #5A7499;
+  --color-gold:             #A5851F;
+  --color-up:               #C0392B;
+  --color-down:             #2E7D52;
+  --color-success:          var(--color-up);
+  --color-success-hover:    var(--color-up);
+  --color-success-highlight:rgba(192,57,43,.08);
+  --color-error:            var(--color-down);
+  --color-error-hover:      var(--color-down);
+  --color-error-highlight:  rgba(46,125,82,.08);
+  --color-warning:          #A5851F;
+  --color-warning-highlight:rgba(165,133,31,.10);
+  --color-lavender:           #5A7499;
+  --color-lavender-highlight: rgba(90, 116, 153, 0.12);
   --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
   --shadow-md:  0 4px 12px rgba(0,0,0,.1);
   --shadow-lg:  0 8px 32px rgba(0,0,0,.12);
@@ -115,20 +133,38 @@ html { scroll-behavior: smooth; }
 
 /* ===================== Typography ===================== */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Noto Sans TC', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
   overflow: hidden;
   height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
-h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
-h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
-h3 { font-size: 1rem; font-weight: 600; }
-code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 14px; font-weight: 600; }
+code, .mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
 .tabular-nums { font-variant-numeric: tabular-nums; }
+.display-num { font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.micro-label { font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
+table, td, th { font-variant-numeric: tabular-nums; }
+
+/* ===================== 卡片切角＋角刻線 ===================== */
+.card-chamfer {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+.card-ticked { position: relative; }
+.card-ticked::before, .card-ticked::after {
+  content: '';
+  position: absolute;
+  background: var(--color-primary);
+}
+.card-ticked::before { top: 0; left: 0; width: 18px; height: 2px; }
+.card-ticked::after  { top: 0; left: 0; width: 2px; height: 18px; }
+.card-ticked.card-ticked-accent::before,
+.card-ticked.card-ticked-accent::after { background: var(--color-accent); }
 
 /* ===================== App Shell ===================== */
 .app-shell {
@@ -170,10 +206,45 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   mix-blend-mode: normal;
 }
 .header-logo span {
+  font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
   font-weight: 700;
   font-size: 1rem;
   color: var(--color-text);
   letter-spacing: -0.02em;
+}
+
+/* LOGO 首載書寫動畫（僅首次，localStorage 記錄） */
+.header-logo img.logo-writing {
+  clip-path: inset(-20% 100% -20% 0);
+  animation: logoWrite 1.8s steps(36) forwards;
+}
+@keyframes logoWrite {
+  to { clip-path: inset(-20% -10% -20% 0); }
+}
+.header-logo span.logo-fadeup {
+  opacity: 0;
+  animation: logoFadeUp .5s ease 2.1s forwards;
+}
+@keyframes logoFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Regime 幾何色塊（取代 emoji 圓點） */
+.regime-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--color-gold);
+}
+
+/* Placeholder 幾何線框圖形（切角方塊＋斜線） */
+.placeholder-geo {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--color-border);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  background: linear-gradient(135deg, transparent 47%, var(--color-border) 47%, var(--color-border) 53%, transparent 53%);
 }
 
 /* --- Tab Navigation --- */
@@ -337,13 +408,17 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow .3s, border-color .3s;
+  /* 方形卡片＋左上角刻線；hover 不變色、不切角（避免吃掉右上邊框與內部下拉層） */
+  position: relative;
 }
-.card:hover {
-  box-shadow: var(--shadow-glow);
-  border-color: var(--color-primary-highlight);
+.card::before, .card::after {
+  content: '';
+  position: absolute;
+  background: var(--color-primary);
+  pointer-events: none;
 }
+.card::before { top: 0; left: 0; width: 18px; height: 2px; }
+.card::after  { top: 0; left: 0; width: 2px; height: 18px; }
 .card-title {
   font-size: 0.78rem;
   font-weight: 600;
@@ -369,8 +444,6 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .kpi-card:hover {
   border-color: var(--color-primary);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-2px);
 }
 .kpi-label {
   font-size: 0.72rem;
@@ -513,8 +586,8 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   align-items: center;
   gap: 5px;
   padding: 4px 12px;
-  border-radius: 20px;
-  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text-muted);
   font-size: 0.76rem;
@@ -526,7 +599,6 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .toggle-pill .dot {
   width: 8px; height: 8px;
-  border-radius: 50%;
   display: inline-block;
   transition: transform .2s;
 }
@@ -608,8 +680,6 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
   padding: var(--space-xl);
-  /* Drag handle visual hint */
-  box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
 }
 .drawer::before {
   content: '';
@@ -675,18 +745,18 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .btn-primary {
   padding: var(--space-sm) var(--space-lg);
   background: var(--color-primary);
-  color: #fff;
+  color: #F2E4E4;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background .2s, box-shadow .2s;
+  transition: background .15s ease;
 }
 .btn-primary:hover {
   background: var(--color-primary-hover);
-  box-shadow: var(--shadow-glow);
 }
 .btn-ghost {
   padding: var(--space-sm) var(--space-md);
@@ -701,8 +771,8 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transition: all .2s;
 }
 .btn-ghost:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 /* ===================== Module Placeholder ===================== */

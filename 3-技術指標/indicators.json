@@ -1,0 +1,1128 @@
+{
+  "version": 1,
+  "indicators": [
+    {
+      "id": "accumulation_distribution",
+      "name": "累積/派發指標",
+      "name_en": "Accumulation/Distribution Line",
+      "formula": "資金流量乘數 CLV_t = ((close_t - low_t) - (high_t - close_t)) / (high_t - low_t)；資金流量 MFV_t = CLV_t * volume_t；AD_t = AD_(t-1) + MFV_t；訊號線 = AD 的 ma_period 期簡單移動平均，用於判斷 AD 趨勢方向與背離",
+      "params": {
+        "ma_period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "AD 為量價領先指標，收盤價於當日高低區間的相對位置搭配成交量可提前反映資金流向，但其 ma_period 均線訊號本身具滯後性",
+      "reasoning": "AD 指標透過收盤價在當日最高最低價區間內的相對位置，判斷買賣力道強弱，再乘以成交量累加得出資金流向；當價格走勢與 AD 走勢背離時，暗示當前趨勢動能減弱或可能反轉",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "AD 由下往上穿越其 ma_period 期移動平均線（AD 黃金交叉），或價格創新低但 AD 未創新低（底背離）時買入",
+        "exit": "AD 由上往下穿越其 ma_period 期移動平均線（AD 死亡交叉），或價格創新高但 AD 未創新高（頂背離）時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.26,
+        "momentum": 0.63,
+        "volatility": 0.0,
+        "volume": 1.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "ratio_normalize",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "signed_volume_sum",
+          "weight": 95,
+          "facet": "volume"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 25,
+          "facet": "trend"
+        }
+      ]
+    },
+    {
+      "id": "adx",
+      "name": "平均趨向指標",
+      "name_en": "ADX",
+      "formula": "+DM = 當日最高價 - 前日最高價(若為負或小於-DM則為0)；-DM = 前日最低價 - 當日最低價(若為負或小於+DM則為0)；TR = max(當日最高-當日最低, |當日最高-前日收盤|, |當日最低-前日收盤|)；+DI = 100 * EMA(+DM, period) / EMA(TR, period)；-DI = 100 * EMA(-DM, period) / EMA(TR, period)；DX = 100 * |+DI - -DI| / (+DI + -DI)；ADX = EMA(DX, period)",
+      "params": {
+        "period": {
+          "start": 7,
+          "end": 28,
+          "step": 1,
+          "default": 14,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "ADX屬於滯後指標，因採用平滑移動平均計算，訊號在趨勢已形成後才明顯上升",
+      "reasoning": "ADX本身不顯示方向，僅衡量趨勢強度；需搭配+DI與-DI的交叉判斷方向，數值高於20代表趨勢增強，高於40代表強勢趨勢，低於20則為區間盤",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "當ADX > 20且+DI由下往上穿越-DI時買入(多頭趨勢確立)",
+        "exit": "當ADX > 20且-DI由下往上穿越+DI時賣出，或ADX跌破20時出場(趨勢轉弱)"
+      },
+      "facet_scores": {
+        "trend": 0.17,
+        "momentum": 1.0,
+        "volatility": 0.34,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "difference",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "true_range",
+          "weight": 50,
+          "facet": "volatility"
+        },
+        {
+          "primitive": "ratio_normalize",
+          "weight": 88,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 25,
+          "facet": "trend"
+        }
+      ]
+    },
+    {
+      "id": "atr",
+      "name": "平均真實區間",
+      "name_en": "Average True Range",
+      "formula": "TR = max(high - low, abs(high - prev_close), abs(low - prev_close)); ATR = MA(TR, period)",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 14,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "屬於滯後型指標,以歷史價格區間平均計算,對波動變化反應有延遲",
+      "reasoning": "ATR 衡量價格波動幅度而非方向,透過真實區間(True Range)取移動平均,反映市場當前波動性大小,常用於設定停損距離、判斷突破有效性或作為部位規模調整依據",
+      "param_constraints": [
+        "period >= 1"
+      ],
+      "facet_scores": {
+        "trend": 0.35,
+        "momentum": 0.0,
+        "volatility": 1.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "true_range",
+          "weight": 85,
+          "facet": "volatility"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 30,
+          "facet": "trend"
+        }
+      ]
+    },
+    {
+      "id": "bias",
+      "name": "乖離率",
+      "name_en": "Bias Ratio",
+      "formula": "BIAS = (close - MA(close, period)) / MA(close, period) * 100",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 24,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "屬於滯後型指標,以移動平均線為基準計算價格偏離程度,對趨勢轉折反應有延遲",
+      "reasoning": "乖離率衡量目前價格與移動平均線之間的百分比偏離程度,正值代表價格高於均線、負值代表價格低於均線,數值過大或過小常被視為短期超買或超賣訊號,適合用於判斷價格是否過度偏離其長期趨勢而可能出現修正",
+      "param_constraints": [
+        "period >= 2"
+      ],
+      "backtest_logic": {
+        "entry": "BIAS < -bias_threshold 時買入(視為超賣訊號),或 BIAS > bias_threshold 時賣出(視為超買訊號)",
+        "exit": "BIAS 回歸至 0 附近或反向超過另一側門檻時出場"
+      },
+      "facet_scores": {
+        "trend": 0.37,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 55,
+          "facet": "trend"
+        },
+        {
+          "primitive": "difference",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "rate_of_change",
+          "weight": 90,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "bollinger_bands",
+      "name": "布林通道",
+      "name_en": "Bollinger Bands",
+      "formula": "middle_band = SMA(close, period); upper_band = middle_band + std_mult * STD(close, period); lower_band = middle_band - std_mult * STD(close, period)",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        },
+        "std_mult": {
+          "start": 1.0,
+          "end": 3.0,
+          "step": 0.1,
+          "default": 2.0,
+          "type": "float"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "屬於滯後型指標,因中軌採用移動平均線計算,對價格變化的反應會有延遲",
+      "reasoning": "布林通道結合移動平均線與統計學標準差概念,上下軌隨價格波動性動態擴張或收縮,用以判斷價格相對高低位置及市場波動狀態,常用於偵測價格突破、反轉及超買超賣區間",
+      "param_constraints": [
+        "period >= 5",
+        "std_mult > 0"
+      ],
+      "backtest_logic": {
+        "entry": "close < lower_band 買入(視為超賣反彈訊號); close > upper_band 賣出(視為超買反轉訊號)",
+        "exit": "close 回到 middle_band 附近時平倉,或反向穿越對側軌道時出場"
+      },
+      "facet_scores": {
+        "trend": 0.28,
+        "momentum": 0.0,
+        "volatility": 1.0,
+        "volume": 0.0,
+        "support_resistance": 0.28,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 25,
+          "facet": "trend"
+        },
+        {
+          "primitive": "stddev",
+          "weight": 90,
+          "facet": "volatility"
+        },
+        {
+          "primitive": "band_level",
+          "weight": 25,
+          "facet": "support_resistance"
+        }
+      ]
+    },
+    {
+      "id": "chaikin_volatility",
+      "name": "蔡金波動指標",
+      "name_en": "Chaikin Volatility",
+      "formula": "REMA = EMA(high - low, ema_period); Chaikin_Volatility = (REMA - REMA_n_periods_ago) / REMA_n_periods_ago * 100, where n = roc_period",
+      "params": {
+        "ema_period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 10,
+          "type": "int"
+        },
+        "roc_period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 10,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "屬於滯後型指標,先對高低價差取指數移動平均後再計算變動率,反應波動變化有一定延遲",
+      "reasoning": "Chaikin Volatility 衡量每日最高價與最低價價差的指數移動平均之變動率,價差擴大代表波動性上升,價差縮小代表波動性下降,常用於判斷市場即將出現趨勢啟動或反轉前的波動壓縮階段",
+      "param_constraints": [
+        "ema_period >= 1",
+        "roc_period >= 1"
+      ],
+      "facet_scores": {
+        "trend": 0.22,
+        "momentum": 1.0,
+        "volatility": 0.78,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "band_width",
+          "weight": 70,
+          "facet": "volatility"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 20,
+          "facet": "trend"
+        },
+        {
+          "primitive": "rate_of_change",
+          "weight": 90,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "standard_deviation",
+      "name": "標準差",
+      "name_en": "Standard Deviation",
+      "formula": "StdDev = sqrt( sum((close - SMA(close, period))^2, period) / period )",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "屬於滯後型指標,以歷史價格與其平均值的離散程度計算,對波動變化的反應有延遲",
+      "reasoning": "標準差衡量價格在一段期間內偏離平均值的離散程度,數值越大代表價格波動性越高,數值越小代表市場趨於穩定,常作為衡量市場波動性的基礎指標,並用於布林通道等其他指標的計算基礎",
+      "param_constraints": [
+        "period >= 2"
+      ],
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 0.0,
+        "volatility": 1.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "stddev",
+          "weight": 95,
+          "facet": "volatility"
+        }
+      ]
+    },
+    {
+      "id": "dmi",
+      "name": "動向指標",
+      "name_en": "Directional Movement Index",
+      "formula": "+DM = 今日最高價 - 昨日最高價（若為正且大於-DM則保留，否則為0）；-DM = 昨日最低價 - 今日最低價（若為正且大於+DM則保留，否則為0）；TR = max(今日最高價-今日最低價, |今日最高價-昨日收盤價|, |今日最低價-昨日收盤價|)；+DI = SMA(+DM, period) / SMA(TR, period) × 100；-DI = SMA(-DM, period) / SMA(TR, period) × 100；DX = |(+DI - -DI) / (+DI + -DI)| × 100；ADX = SMA(DX, adx_period)",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 14,
+          "type": "int"
+        },
+        "adx_period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 14,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "DMI屬於滯後指標，ADX計算需先平滑DX值，因此對趨勢強度的反應會落後於價格轉折",
+      "reasoning": "利用+DI與-DI的相對強弱判斷多空方向，並以ADX衡量趨勢強度，ADX數值愈高代表趨勢愈明確，數值偏低則代表市場處於盤整，可作為濾網搭配其他指標使用",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "+DI由下往上穿越-DI且ADX高於25（趨勢確立）時買入",
+        "exit": "-DI由下往上穿越+DI或ADX轉弱跌破25時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.17,
+        "momentum": 1.0,
+        "volatility": 0.34,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "difference",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "true_range",
+          "weight": 50,
+          "facet": "volatility"
+        },
+        {
+          "primitive": "ratio_normalize",
+          "weight": 88,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 25,
+          "facet": "trend"
+        }
+      ]
+    },
+    {
+      "id": "fibonacci_retracement",
+      "name": "費波那契回檔",
+      "name_en": "Fibonacci Retracement",
+      "formula": "以過去 lookback_period 期內的最高價 swing_high 與最低價 swing_low 定義波段區間；回檔水平 Level(ratio) = swing_high - (swing_high - swing_low) * ratio，其中 ratio 常用值包含 0.236、0.382、0.5、0.618、0.786；價格向下回檔至某一水平可能形成支撐，向上反彈至某一水平可能形成壓力",
+      "params": {
+        "lookback_period": {
+          "start": 10,
+          "end": 120,
+          "step": 1,
+          "default": 60,
+          "type": "int"
+        },
+        "ratio": {
+          "start": 0.236,
+          "end": 0.786,
+          "step": 0.001,
+          "default": 0.618,
+          "type": "float"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "回檔水平以歷史波段高低點計算，屬於滯後定義的靜態價位，需價格實際回測該水平才產生訊號",
+      "reasoning": "費波那契回檔運用黃金分割比率，將一段明確的上漲或下跌波段劃分為多個關鍵百分比水平，市場價格在回調過程中常於這些水平獲得支撐或遇到阻力，反映市場心理上對特定比例的敏感度",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "上升趨勢中價格回檔至 ratio（如0.5或0.618）水平且出現止跌訊號時買入，或下降趨勢中價格反彈至 ratio 水平且出現轉弱訊號時賣出",
+        "exit": "價格向下跌破所設定的 ratio 支撐水平時出場，或價格向上突破 ratio 壓力水平後反轉時出場"
+      },
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 1.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "window_extreme",
+          "weight": 85,
+          "facet": "support_resistance"
+        },
+        {
+          "primitive": "band_level",
+          "weight": 95,
+          "facet": "support_resistance"
+        }
+      ]
+    },
+    {
+      "id": "ichimoku",
+      "name": "一目雲圖",
+      "name_en": "Ichimoku Cloud",
+      "formula": "轉換線 = (最高價_conversion_period週期最高 + 最低價_conversion_period週期最低) / 2；基準線 = (最高價_base_period週期最高 + 最低價_base_period週期最低) / 2；先行帶A = (轉換線 + 基準線) / 2，向前推移displacement期；先行帶B = (最高價_leading_span_b_period週期最高 + 最低價_leading_span_b_period週期最低) / 2，向前推移displacement期；遲行帶 = 收盤價向後推移displacement期",
+      "params": {
+        "conversion_period": {
+          "start": 5,
+          "end": 15,
+          "step": 1,
+          "default": 9,
+          "type": "int"
+        },
+        "base_period": {
+          "start": 15,
+          "end": 35,
+          "step": 1,
+          "default": 26,
+          "type": "int"
+        },
+        "leading_span_b_period": {
+          "start": 35,
+          "end": 70,
+          "step": 1,
+          "default": 52,
+          "type": "int"
+        },
+        "displacement": {
+          "start": 15,
+          "end": 35,
+          "step": 1,
+          "default": 26,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "先行帶為領先指標(向前推移顯示未來支撐阻力)，遲行帶為滯後指標(向後對照過去價格)，整體系統兼具領先與滯後特性",
+      "reasoning": "利用轉換線與基準線交叉判斷短中期動能轉折，並以雲帶(先行帶A、B)的相對位置與厚薄判斷支撐阻力強弱及趨勢方向，價格高於雲帶為多頭、低於雲帶為空頭、在雲內則盤整",
+      "param_constraints": [
+        "conversion_period < base_period",
+        "base_period < leading_span_b_period"
+      ],
+      "backtest_logic": {
+        "entry": "轉換線由下往上穿越基準線(黃金交叉)且股價位於雲帶之上時買入",
+        "exit": "轉換線由上往下穿越基準線(死亡交叉)且股價位於雲帶之下時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.9,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 1.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "window_extreme",
+          "weight": 55,
+          "facet": "support_resistance"
+        },
+        {
+          "primitive": "window_midpoint",
+          "weight": 90,
+          "facet": "trend"
+        },
+        {
+          "primitive": "band_level",
+          "weight": 45,
+          "facet": "support_resistance"
+        }
+      ]
+    },
+    {
+      "id": "stochastic",
+      "name": "隨機指標",
+      "name_en": "Stochastic Oscillator (KD)",
+      "formula": "RSV = (Close - Ln) / (Hn - Ln) * 100，其中Hn與Ln為近n_period日內最高價與最低價；K = (1/k_smooth) * RSV + (1 - 1/k_smooth) * K_prev；D = (1/d_smooth) * K + (1 - 1/d_smooth) * D_prev",
+      "params": {
+        "n_period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 9,
+          "type": "int"
+        },
+        "k_smooth": {
+          "start": 1,
+          "end": 10,
+          "step": 1,
+          "default": 3,
+          "type": "int"
+        },
+        "d_smooth": {
+          "start": 1,
+          "end": 10,
+          "step": 1,
+          "default": 3,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "隨機指標屬於震盪型指標，反應速度較快，屬於相對領先的動量指標，但於強趨勢盤易出現鈍化",
+      "reasoning": "透過比較收盤價相對於近期高低區間的位置(RSV)並經平滑得出K、D值，判斷超買超賣區域及K、D交叉的買賣訊號",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "K由下往上穿越D(黃金交叉)且處於超賣區(低於20)時買入",
+        "exit": "K由上往下穿越D(死亡交叉)且處於超買區(高於80)時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.29,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.65,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "window_extreme",
+          "weight": 55,
+          "facet": "support_resistance"
+        },
+        {
+          "primitive": "ratio_normalize",
+          "weight": 85,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 25,
+          "facet": "trend"
+        }
+      ]
+    },
+    {
+      "id": "moving_average",
+      "name": "移動平均線",
+      "name_en": "Moving Average",
+      "formula": "MA = (Close_1 + Close_2 + ... + Close_period) / period；當 fast_period 與 slow_period 皆計算時，快線 = SMA(Close, fast_period)，慢線 = SMA(Close, slow_period)",
+      "params": {
+        "fast_period": {
+          "start": 5,
+          "end": 20,
+          "step": 1,
+          "default": 5,
+          "type": "int"
+        },
+        "slow_period": {
+          "start": 10,
+          "end": 60,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "移動平均線為滯後指標，訊號反應價格變動後才出現，於盤整盤易產生假訊號",
+      "reasoning": "利用快線與慢線的相對位置判斷趨勢方向，快線向上穿越慢線代表短期動能轉強（黃金交叉），反之則轉弱（死亡交叉）",
+      "param_constraints": [
+        "fast_period < slow_period"
+      ],
+      "backtest_logic": {
+        "entry": "fast_period 由下往上穿越 slow_period（黃金交叉）時買入",
+        "exit": "fast_period 由上往下穿越 slow_period（死亡交叉）時賣出"
+      },
+      "facet_scores": {
+        "trend": 1.0,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 95,
+          "facet": "trend"
+        }
+      ]
+    },
+    {
+      "id": "macd",
+      "name": "平滑異同移動平均線",
+      "name_en": "MACD",
+      "formula": "DIF = EMA(Close, fast_period) - EMA(Close, slow_period)；MACD訊號線 = EMA(DIF, signal_period)；柱狀圖 = DIF - MACD訊號線",
+      "params": {
+        "fast_period": {
+          "start": 5,
+          "end": 20,
+          "step": 1,
+          "default": 12,
+          "type": "int"
+        },
+        "slow_period": {
+          "start": 15,
+          "end": 40,
+          "step": 1,
+          "default": 26,
+          "type": "int"
+        },
+        "signal_period": {
+          "start": 5,
+          "end": 15,
+          "step": 1,
+          "default": 9,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "MACD屬於滯後指標,由於基於移動平均線計算,訊號會落後價格轉折點",
+      "reasoning": "透過快慢EMA的差離值(DIF)與其平滑線(訊號線)的交叉,判斷趨勢動能的轉強或轉弱,柱狀圖可輔助觀察動能變化速度",
+      "param_constraints": [
+        "fast_period < slow_period"
+      ],
+      "backtest_logic": {
+        "entry": "DIF由下往上穿越訊號線(黃金交叉)時買入",
+        "exit": "DIF由上往下穿越訊號線(死亡交叉)時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.33,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 30,
+          "facet": "trend"
+        },
+        {
+          "primitive": "difference",
+          "weight": 90,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "macd_momentum",
+      "name": "MACD動能指標",
+      "name_en": "MACD Momentum",
+      "formula": "DIF = EMA(Close, fast_period) - EMA(Close, slow_period)；MACD訊號線 = EMA(DIF, signal_period)；柱狀圖(動能值) = DIF - MACD訊號線；動能變化率 = 柱狀圖_t - 柱狀圖_(t-momentum_period)",
+      "params": {
+        "fast_period": {
+          "start": 5,
+          "end": 20,
+          "step": 1,
+          "default": 12,
+          "type": "int"
+        },
+        "slow_period": {
+          "start": 15,
+          "end": 40,
+          "step": 1,
+          "default": 26,
+          "type": "int"
+        },
+        "signal_period": {
+          "start": 5,
+          "end": 15,
+          "step": 1,
+          "default": 9,
+          "type": "int"
+        },
+        "momentum_period": {
+          "start": 1,
+          "end": 10,
+          "step": 1,
+          "default": 3,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "MACD動能指標透過觀察柱狀圖(直方圖)本身的變化速度而非交叉點,較標準MACD訊號線交叉更早反映動能轉折,滯後程度略低於一般MACD",
+      "reasoning": "一般MACD僅以DIF與訊號線交叉(黃金/死亡交叉)判斷買賣點,但MACD動能指標進一步觀察柱狀圖的漸增或漸縮幅度(動能變化率),用以提前捕捉趨勢動能減弱或加速的訊號,常作為交叉訊號出現前的領先觀察工具",
+      "param_constraints": [
+        "fast_period < slow_period"
+      ],
+      "backtest_logic": {
+        "entry": "柱狀圖由負轉正且動能變化率為正(柱狀圖持續放大)時買入",
+        "exit": "柱狀圖由正轉負或動能變化率轉為負(柱狀圖持續縮小)時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.2,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 30,
+          "facet": "trend"
+        },
+        {
+          "primitive": "difference",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "rate_of_change",
+          "weight": 90,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "ma_dynamic_support",
+      "name": "移動平均動態支撐",
+      "name_en": "Moving Average Dynamic Support",
+      "formula": "移動平均線 MA_t = 過去 ma_period 期收盤價 close 的簡單移動平均，即 MA_t = (close_t + close_(t-1) + ... + close_(t-ma_period+1)) / ma_period；當收盤價 close 於上升趨勢中回落但維持在 MA 之上，視為 MA 提供動態支撐；當收盤價向下跌破 MA，視為支撐失守",
+      "params": {
+        "ma_period": {
+          "start": 5,
+          "end": 200,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "移動平均線由歷史價格平滑計算而得，屬於滯後型指標，價格需先變動才能反映在均線位置上",
+      "reasoning": "移動平均線隨價格變動而持續調整位置，在多頭趨勢中常成為價格回檔時獲得買盤支撐的動態價位，反映市場對近期成本區的認同，價格與均線的相對關係可用來判斷趨勢是否持續",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "收盤價回落至 MA 附近但未跌破，並隨後止跌回升時買入，或收盤價由下向上穿越 MA 時買入",
+        "exit": "收盤價向下跌破 MA 時賣出，視為動態支撐失守"
+      },
+      "facet_scores": {
+        "trend": 1.0,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.56,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 90,
+          "facet": "trend"
+        },
+        {
+          "primitive": "band_level",
+          "weight": 50,
+          "facet": "support_resistance"
+        }
+      ]
+    },
+    {
+      "id": "mfi",
+      "name": "資金流量指標",
+      "name_en": "Money Flow Index",
+      "formula": "典型價格 TP_t = (high_t + low_t + close_t) / 3；資金流量 MF_t = TP_t * volume_t；若 TP_t > TP_(t-1)，則為正資金流（正MF），否則為負資金流（負MF）；正資金流量比 MR = (period 期正MF總和) / (period 期負MF總和)；MFI = 100 - (100 / (1 + MR))",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 14,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "MFI 結合價格與成交量計算資金流向，較單純價格型動能指標（如RSI）更能提前反映資金流入流出，但仍屬同步略帶滯後的震盪指標",
+      "reasoning": "MFI 又稱為量價RSI，透過典型價格漲跌方向區分資金流入或流出，再計算正負資金流量比率轉換為0至100的震盪值，用以判斷市場超買超賣及背離訊號",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "MFI 由超賣區（低於20）向上突破20，或價格創新低但MFI未創新低（底背離）時買入",
+        "exit": "MFI 由超買區（高於80）向下跌破80，或價格創新高但MFI未創新高（頂背離）時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.47,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "direction_sign",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "signed_volume_sum",
+          "weight": 70,
+          "facet": "volume"
+        },
+        {
+          "primitive": "ratio_normalize",
+          "weight": 90,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "obv",
+      "name": "能量潮指標",
+      "name_en": "On Balance Volume",
+      "formula": "若 close_t > close_(t-1)，則 OBV_t = OBV_(t-1) + volume_t；若 close_t < close_(t-1)，則 OBV_t = OBV_(t-1) - volume_t；若 close_t = close_(t-1)，則 OBV_t = OBV_(t-1)",
+      "params": {
+        "ma_period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "OBV 為量價領先指標，理論上成交量變化領先價格變化（量先價行），但實務上其進出場用的訊號線（ma_period 均線）本身具滯後性",
+      "reasoning": "OBV 透過收盤價漲跌方向累加或扣除成交量，將資金流向數據化；當 OBV 走勢與價格走勢背離時，代表市場買賣力道與價格表現不一致，常被視為趨勢反轉的早期警訊",
+      "param_constraints": [],
+      "backtest_logic": {
+        "signal_line": "訊號線 = OBV 的 ma_period 期簡單移動平均，僅用於進出場判斷，不屬於 OBV 指標本體",
+        "entry": "OBV 由下往上穿越其 ma_period 期移動平均線（OBV 黃金交叉），或價格創新低但 OBV 未創新低（底背離）時買入",
+        "exit": "OBV 由上往下穿越其 ma_period 期移動平均線（OBV 死亡交叉），或價格創新高但 OBV 未創新高（頂背離）時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 0.63,
+        "volatility": 0.0,
+        "volume": 1.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "direction_sign",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "signed_volume_sum",
+          "weight": 95,
+          "facet": "volume"
+        }
+      ]
+    },
+    {
+      "id": "roc",
+      "name": "變動率指標",
+      "name_en": "Rate of Change",
+      "formula": "ROC = (Close - Close_n_periods_ago) / Close_n_periods_ago * 100，其中 period 為比較的天數區間",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 12,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "ROC屬於動能領先指標，價格變動速度轉折常領先價格本身出現轉折，但短週期易產生雜訊",
+      "reasoning": "透過比較當前收盤價與n天前收盤價的百分比變化，衡量價格上漲或下跌的速度與動能強弱，以0為多空分界基準",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "ROC由負轉正（由下往上穿越0軸）時買入，代表動能轉強",
+        "exit": "ROC由正轉負（由上往下穿越0軸）時賣出，代表動能轉弱"
+      },
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "rate_of_change",
+          "weight": 95,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "rsi",
+      "name": "相對強弱指標",
+      "name_en": "Relative Strength Index",
+      "formula": "RSI = 100 - (100 / (1 + RS))，其中 RS = 過去period天平均漲幅 / 過去period天平均跌幅",
+      "params": {
+        "period": {
+          "start": 5,
+          "end": 30,
+          "step": 1,
+          "default": 14,
+          "type": "int"
+        },
+        "overbought": {
+          "start": 60,
+          "end": 90,
+          "step": 1,
+          "default": 70,
+          "type": "int"
+        },
+        "oversold": {
+          "start": 10,
+          "end": 40,
+          "step": 1,
+          "default": 30,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "RSI屬於同步略帶滯後之震盪指標，反映近期價格動能強弱而非直接預測未來走勢",
+      "reasoning": "透過計算一段期間內上漲與下跌幅度的比率，判斷市場是否處於超買或超賣區間，作為反轉訊號的參考依據",
+      "param_constraints": [
+        "oversold < overbought"
+      ],
+      "backtest_logic": {
+        "entry": "RSI由下往上穿越oversold時買入",
+        "exit": "RSI由上往下穿越overbought時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.13,
+        "momentum": 1.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "difference",
+          "weight": 60,
+          "facet": "momentum"
+        },
+        {
+          "primitive": "moving_average",
+          "weight": 20,
+          "facet": "trend"
+        },
+        {
+          "primitive": "ratio_normalize",
+          "weight": 90,
+          "facet": "momentum"
+        }
+      ]
+    },
+    {
+      "id": "ssl",
+      "name": "壓力支撐指標",
+      "name_en": "Semaphore Signal Level (SSL Channel)",
+      "formula": "SSL High Line = 過去 lb_period 期最高價 high 的移動平均，即 SSLU_t = MA(high, lb_period)；SSL Low Line = 過去 lb_period 期最低價 low 的移動平均，即 SSLD_t = MA(low, lb_period)；當收盤價 close 高於 SSLU 與 SSLD 時偏多，低於兩線時偏空，當 SSLU 與 SSLD 交叉時視為趨勢反轉訊號",
+      "params": {
+        "lb_period": {
+          "start": 5,
+          "end": 60,
+          "step": 1,
+          "default": 10,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "SSL 以歷史高低價的移動平均計算通道，屬於滯後型趨勢追蹤指標，訊號在均線交叉後才確認",
+      "reasoning": "SSL 分別將移動平均套用在最高價與最低價上，形成一個隨價格波動的通道，通道的寬窄反映波動性大小，當價格突破通道或兩條均線交叉時，代表原有趨勢可能反轉或新趨勢正在形成",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "SSL High Line（高點均線）向上穿越 SSL Low Line（低點均線），或收盤價向上突破通道上緣時買入",
+        "exit": "SSL Low Line 向上穿越 SSL High Line，或收盤價向下跌破通道下緣時賣出"
+      },
+      "facet_scores": {
+        "trend": 1.0,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 0.56,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "moving_average",
+          "weight": 90,
+          "facet": "trend"
+        },
+        {
+          "primitive": "band_level",
+          "weight": 50,
+          "facet": "support_resistance"
+        }
+      ]
+    },
+    {
+      "id": "support_resistance",
+      "name": "傳統支撐壓力線",
+      "name_en": "Traditional Support and Resistance",
+      "formula": "壓力線 Resistance_t = 過去 lookback_period 期內的最高價 high 的最大值 (t-lookback_period 到 t-1)；支撐線 Support_t = 過去 lookback_period 期內的最低價 low 的最小值 (t-lookback_period 到 t-1)；當收盤價向上突破 Resistance 視為突破訊號，向下跌破 Support 視為破位訊號",
+      "params": {
+        "lookback_period": {
+          "start": 5,
+          "end": 120,
+          "step": 1,
+          "default": 20,
+          "type": "int"
+        }
+      },
+      "market_regime": "區間盤",
+      "lag_note": "以歷史高低點定義支撐壓力，屬於滯後型指標，需價格實際觸及或突破後才產生訊號",
+      "reasoning": "支撐壓力線透過統計過去一段期間內價格的極值，找出市場曾出現買盤或賣盤集中承接與拋售的關鍵價位，作為判斷價格反彈、反轉或突破的參考基準",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "收盤價向上突破過去 lookback_period 期高點（Resistance）時買入，或價格觸及 Support 支撐後出現止跌訊號時買入",
+        "exit": "收盤價向下跌破過去 lookback_period 期低點（Support）時賣出，或價格觸及 Resistance 壓力後出現轉弱訊號時賣出"
+      },
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 1.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "window_extreme",
+          "weight": 95,
+          "facet": "support_resistance"
+        }
+      ]
+    },
+    {
+      "id": "trendline",
+      "name": "傳統趨勢線",
+      "name_en": "Traditional Trendline",
+      "formula": "上升趨勢線：連接過去 lookback_period 期內至少兩個相對低點 low，並向未來延伸形成支撐線；下降趨勢線：連接過去 lookback_period 期內至少兩個相對高點 high，並向未來延伸形成壓力線；當收盤價 close 向上突破下降趨勢線或向下跌破上升趨勢線時產生訊號",
+      "params": {
+        "lookback_period": {
+          "start": 10,
+          "end": 120,
+          "step": 1,
+          "default": 60,
+          "type": "int"
+        }
+      },
+      "market_regime": "趨勢盤",
+      "lag_note": "趨勢線需至少兩個轉折點確認後才能繪製，屬於滯後型工具，訊號在價格突破線位時才觸發",
+      "reasoning": "趨勢線透過連接價格波動中的相對高點或低點，描繪出市場多空力道的動態邊界，當價格突破既有趨勢線時，代表原有供需關係改變，常被視為趨勢延續或反轉的訊號",
+      "param_constraints": [],
+      "backtest_logic": {
+        "entry": "收盤價向上突破下降趨勢線（壓力線）時買入，或價格回測上升趨勢線（支撐線）獲支撐後買入",
+        "exit": "收盤價向下跌破上升趨勢線（支撐線）時賣出，或價格反彈至下降趨勢線（壓力線）受阻後賣出"
+      },
+      "facet_scores": {
+        "trend": 0.0,
+        "momentum": 0.0,
+        "volatility": 0.0,
+        "volume": 0.0,
+        "support_resistance": 1.0,
+        "cycle": 0.0
+      },
+      "op_breakdown": [
+        {
+          "primitive": "window_extreme",
+          "weight": 60,
+          "facet": "support_resistance"
+        },
+        {
+          "primitive": "band_level",
+          "weight": 90,
+          "facet": "support_resistance"
+        }
+      ]
+    }
+  ],
+  "updated_at": "2026-07-12T04:38:16+00:00"
+}
